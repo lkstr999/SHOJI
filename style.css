@@ -1,31 +1,36 @@
 /* ----------------------------------------------------------------- */
-/* 🎨 グローバル/リセットスタイル */
+/* 🎨 グローバル/リセットスタイル (iPhone風のミニマルデザイン) */
 /* ----------------------------------------------------------------- */
 body {
     font-family: 'Noto Sans JP', 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f8f8f8; /* わずかに暗い背景色 */
-    color: #333;
-    line-height: 1.6;
+    background-color: #f2f2f7; /* iOSの背景色に近いライトグレー */
+    color: #1c1c1e; /* 濃い文字色 */
+    line-height: 1.5;
 }
 
 header {
-    background-color: #212529; /* 濃いブラックヘッダー */
-    color: white;
-    padding: 20px 20px;
+    background-color: white; /* ヘッダーを白に変更 */
+    color: #1c1c1e;
+    padding: 15px 20px;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid #c7c7cc; /* 薄い区切り線 */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 header h1 {
     margin: 0;
     font-weight: 700;
+    font-size: 1.3em;
 }
 
 main {
-    padding: 20px;
-    max-width: 1000px; /* 最大幅を少し狭くし、中央に集約 */
+    padding: 20px 10px; /* 左右の余白を抑えめに */
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -33,167 +38,122 @@ main {
 /* 🍞 パンくずリスト (Breadcrumb) */
 /* ----------------------------------------------------------------- */
 #breadcrumb {
-    margin-bottom: 25px;
-    font-size: 1em;
-    padding: 12px 15px;
+    margin: 5px 10px 20px 10px;
+    font-size: 0.95em;
+    padding: 10px 15px;
     background-color: white;
-    border-radius: 4px;
-    border-left: 5px solid #007bff; /* アクセントライン */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .crumb {
     cursor: pointer;
-    color: #495057;
+    color: #007aff; /* iOSのブルー */
     text-decoration: none;
     margin-right: 5px;
     font-weight: 500;
-    transition: color 0.2s;
-}
-
-.crumb:hover {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.crumb:not(:last-child)::after {
-    content: ' / ';
-    color: #ced4da;
-    font-weight: normal;
-    margin-left: 5px;
 }
 
 .crumb:last-child {
-    color: #212529; /* アクティブな要素 */
+    color: #3a3a3c;
     cursor: default;
     font-weight: 700;
 }
 
 /* ----------------------------------------------------------------- */
-/* 📋 コンテンツエリア (リスト表示に特化) */
+/* 🧱 分類１のタイル表示エリア */
 /* ----------------------------------------------------------------- */
-#content-area {
+.category-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* PC: 広いタイル */
+    gap: 12px;
+    padding: 0 10px;
+}
+
+.category-tile {
+    background-color: white;
+    padding: 20px 10px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s;
+    text-align: center;
+    cursor: pointer;
+    min-height: 80px;
     display: flex;
     flex-direction: column;
-    gap: 12px; /* リスト間の間隔 */
+    justify-content: center;
+    border: 1px solid #e5e5ea;
 }
 
-/* 🧱 リストアイテム共通スタイル (分類項目・商品詳細の両方に使用) */
-.list-item {
-    background-color: white;
-    padding: 15px 20px;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: transform 0.1s, box-shadow 0.1s;
-    cursor: pointer;
+.category-tile:hover {
+    transform: scale(0.98);
+    background-color: #f7f7f7;
 }
 
-.list-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* 📑 分類項目のリストスタイル (分類１の選択肢) */
-.category-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-left: 5px solid #20c997; /* ターコイズアクセント */
-}
-
-.category-title {
-    font-size: 1.1em;
+.tile-title {
+    font-size: 1em;
     font-weight: 700;
-    color: #333;
+    color: #1c1c1e;
+    margin-bottom: 5px;
 }
 
-.category-count {
-    font-size: 0.9em;
-    color: #6c757d;
-    background-color: #e9ecef;
-    padding: 4px 8px;
-    border-radius: 12px;
+.tile-count {
+    font-size: 0.8em;
+    color: #8e8e93;
 }
 
-/* 🛒 商品詳細のリストスタイル */
-.product-item {
-    cursor: default; /* クリック不可にする */
-    border-left: 5px solid #007bff; /* ブルーアクセント */
+/* ----------------------------------------------------------------- */
+/* 📋 商品リスト (Excel表形式) */
+/* ----------------------------------------------------------------- */
+.product-grid-container {
+    padding: 0 10px;
+}
+
+/* ヘッダー行 */
+.product-header {
     display: grid;
-    grid-template-columns: 1fr 2fr; /* PC表示: 左に品番、右に詳細 */
-    gap: 10px;
-    padding: 15px 20px;
-}
-
-.product-item:hover {
-    transform: none; /* ホバー効果を削除 */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.product-code-area {
-    font-size: 1.2em;
+    background-color: #e5e5ea; /* ヘッダーの背景色 */
     font-weight: 700;
-    color: #dc3545; /* 品番を赤で強調 */
-    border-right: 1px solid #dee2e6; /* 区切り線 */
-    padding-right: 15px;
-}
-
-.product-details-area {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px 15px;
-    font-size: 0.9em;
-}
-
-.detail-group {
-    min-width: 150px;
-}
-
-.detail-group strong {
-    font-weight: 700;
-    color: #495057;
-    display: block;
-    margin-bottom: 2px;
+    padding: 10px 0;
+    border-radius: 6px 6px 0 0;
+    border-bottom: 2px solid #d1d1d6;
     font-size: 0.85em;
+    color: #3a3a3c;
+    position: sticky;
+    top: 50px; /* ヘッダーの高さに合わせて固定 */
+    z-index: 50;
 }
 
-.detail-group span {
-    word-break: break-all;
+/* データ行 */
+.product-row {
+    display: grid;
+    background-color: white;
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e5ea;
+    font-size: 0.9em;
+    transition: background-color 0.1s;
 }
 
-/* 📱 レスポンシブ対応 (スマホ) */
-@media (max-width: 767px) {
-    main {
-        padding: 10px;
-    }
-    header h1 {
-        font-size: 1.4em;
-    }
-    
-    .category-item {
-        padding: 12px 15px;
-    }
-
-    .product-item {
-        grid-template-columns: 1fr; /* スマホ表示: 縦積み */
-        padding: 15px;
-    }
-
-    .product-code-area {
-        border-right: none;
-        border-bottom: 1px solid #dee2e6; /* 品番の下に線 */
-        padding-right: 0;
-        padding-bottom: 10px;
-        margin-bottom: 5px;
-    }
-
-    .product-details-area {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .detail-group {
-        min-width: 100%;
-    }
+.product-row:hover {
+    background-color: #f0f0f5;
 }
+
+.product-row div, .product-header div {
+    padding: 0 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.product-row .col-品番 {
+    font-weight: 600;
+    color: #d11e1e; /* 品番を赤で強調 */
+}
+
+/* ----------------------------------------------------------------- */
+/* 📱 グリッドカラム定義とレスポンシブ対応 */
+/* ----------------------------------------------------------------- */
+/* PC表示 (1200px以上): 全カラム表示 */
+@media (min-width: 900px) {
+    .product-header, .product-row
