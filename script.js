@@ -21,10 +21,12 @@ function initialize() {
         .then(response => response.text())
         .then(csvText => {
             masterData = parseCSV(csvText);
-            // 2. すべてのカテゴリコンテナをHTMLに生成
+            
+            // ★★★ 修正点1: すべてのカテゴリコンテナをHTMLに生成（初期表示時は非表示） ★★★
             for (let i = 0; i < NUM_CATEGORIES; i++) {
                 categoryContainer.appendChild(createCategoryContainer(i));
             }
+            
             // 3. 分類1のボタンリストを初期化
             updateFilters(0);
         })
@@ -88,11 +90,13 @@ function createCategoryContainer(index) {
     const container = document.createElement('div');
     container.id = `category-container-${index}`;
     container.classList.add('category-container');
-    container.classList.add('hidden'); // 初期状態では隠す
-
+    
+    // ★★★ 修正点2: 分類タイトルを追加 ★★★
     const title = document.createElement('h3');
     title.textContent = `分類${index + 1}`;
     container.appendChild(title);
+    
+    container.classList.add('hidden'); // 初期状態では隠す
 
     const buttonList = document.createElement('div');
     buttonList.id = `button-list-${index}`;
@@ -161,7 +165,7 @@ function updateButtonVisuals(index) {
 function resetAll() {
     selectedFilters.fill(null); // フィルタをリセット
 
-    // すべてのカテゴリコンテナを非表示に戻す
+    // すべてのカテゴリコンテナを非表示に戻す (分類0以外)
     for (let i = 1; i < NUM_CATEGORIES; i++) {
         document.getElementById(`category-container-${i}`).classList.add('hidden');
         document.getElementById(`button-list-${i}`).innerHTML = ''; // ボタンもクリア
