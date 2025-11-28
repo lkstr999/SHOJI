@@ -1,335 +1,256 @@
-// パスワードチェック機能は完全に削除されています。
+// CSVファイル名
+const CSV_FILE_NAME = '商品マスタ.csv';
+// 階層の列名 (分類1, 分類2, 分類3, 分類4, 分類5, 分類6)
+const CATEGORY_COLUMNS = ['分類１', '分類２', '分類３', '分類４', '分類５', '分類６'];
+// 商品詳細として表示する列名 (任意で調整してください)
+const PRODUCT_COLUMNS = [
+    { key: '品番', label: '品番' },
+    { key: '備考１', label: '備考１' },
+    { key: '備考２', label: '備考２' },
+];
 
-const CSV_FILE_PATH = '商品マスタ.csv';
-const NUM_CATEGORIES = 6;
-let masterData = [];
+let allData = []; // 全商品データ
+let currentLevel = 0; // 現在表示している分類の階層 (0: 全て, 1: 分類1, ...)
+let currentFilters = {}; // 現在の絞り込み条件
+let headers = []; // CSVのヘッダー情報
 
-// 現在の選択状態を保持する配列 (index 0=分類1, index 5=分類6)
-// null: 未選択, '値': 選択済み
-let selectedFilters = new Array(NUM_CATEGORIES).fill(null); 
+const contentArea = document.getElementById('content-area');
+const breadcrumbContainer = document.getElementById('breadcrumb');
+const loadingMessage = document.getElementById('loading-message');
 
-const categoryContainer = document.getElementById('category-containers');
-const resultsDiv = document.getElementById('results');
-const resetButton = document.getElementById('reset-all');
 
-// --- 1. 初期化処理 ---
-initialize();
+/**
+ * 💻 初期化処理
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    fetchCsvData(CSV_FILE_NAME);
+});
 
-function initialize() {
-    // 1. CSVファイルを読み込み
-    fetch(CSV_FILE_PATH)
-        .then(response => response.text())
-        .then(csvText => {
-            masterData = parseCSV(csvText);
-            
-            // ★★★ 修正点1: すべてのカテゴリコンテナをHTMLに生成（初期表示時は非表示） ★★★
-            for (let i = 0; i < NUM_CATEGORIES; i++) {
-                categoryContainer.appendChild(createCategoryContainer(i));
-            }
-            
-            // 3. 分類1のボタンリストを初期化
-            updateFilters(0);
-        })
-        .catch(error => {
-            console.error('CSVファイルの読み込みエラー:', error);
-            resultsDiv.innerHTML = '<p style="color:red;">データを読み込めませんでした。CSVファイルが正しい場所にあるか、エンコードがUTF-8か確認してください。</p>';
-        });
-
-    // リセットボタンにイベントリスナーを設定
-    resetButton.addEventListener('click', resetAll);
+/**
+ * 💾 CSVファイルを読み込み、パースする
+ * @param {string} url - CSVファイルのパス
+ */
+async function fetchCsvData(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`CSVファイルの読み込みに失敗しました: ${response.statusText}`);
+        }
+        const text = await response.text();
+        // Shift-JISの可能性があるため、必要に応じて処理を加えますが、
+        // GitHub PagesではUTF-8に変換されていることが多いため、ここでは簡易的なパースを行います。
+        parseCsv(text);
+        loadingMessage.style.display = 'none'; // ロード中メッセージを非表示に
+        renderContent(); // 最初の表示をキック
+    } catch (error) {
+        console.error(error);
+        loadingMessage.textContent = 'データの読み込みエラー: ' + error.message;
+        loadingMessage.style.color = 'red';
+    }
 }
 
 /**
- * 簡易CSVパーサ (修正済み: 空欄があっても正しく読み込む)
+ * 📊 CSVテキストを行と列にパースする (簡易版)
+ * @param {string} csvText - CSVファイルの内容
  */
-function parseCSV(csv) {
-    const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
-    if (lines.length === 0) return [];
-    
-    // ヘッダー行を処理
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    const data = [];
+function parseCsv(csvText) {
+    const lines = csvText.trim().split(/\r?\n/);
+    if (lines.length === 0) return;
 
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        // CSVのパース処理を強化: カンマ区切りとクォート処理に対応
-        const values = [];
-        let inQuotes = false;
-        let currentValue = '';
+    // ヘッダーを抽出
+    headers = lines[0].split(',').map(h => h.trim());
 
-        for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                values.push(currentValue);
-                currentValue = '';
-            } else {
-                currentValue += char;
-            }
-        }
-        values.push(currentValue); // 最後の値を追加
-        
+    // データ行をパース
+    allData = lines.slice(1).map(line => {
+        const values = line.split(',');
         const row = {};
-        for (let j = 0; j < headers.length && j < values.length; j++) {
-            // 値のトリムとクォート除去
-            row[headers[j]] = (values[j] || '').trim().replace(/^"|"$/g, '');
+        headers.forEach((header, i) => {
+            // 値はトリムして格納
+            row[header] = values[i] ? values[i].trim() : '';
+        });
+        return row;
+    }).filter(row => row[headers[0]] !== ''); // 最初の列が空の行は除外
+}
+
+
+/**
+ * 🧱 現在の階層に基づいてコンテンツをレンダリングする
+ */
+function renderContent() {
+    contentArea.innerHTML = ''; // コンテンツエリアをクリア
+    const currentCategory = CATEGORY_COLUMNS[currentLevel - 1];
+    
+    // フィルタリング処理
+    const filteredData = allData.filter(item => {
+        for (const key in currentFilters) {
+            // currentFiltersに設定されている分類が、アイテムと一致するかチェック
+            if (item[key] !== currentFilters[key]) {
+                return false;
+            }
         }
-        data.push(row);
-    }
-    
-    return data;
-}
+        return true;
+    });
 
-// --- 2. HTML要素生成とイベント処理 ---
-
-/**
- * 各分類のコンテナ要素 (タイトルとボタンリスト) を生成する
- */
-function createCategoryContainer(index) {
-    const container = document.createElement('div');
-    container.id = `category-container-${index}`;
-    container.classList.add('category-container');
-    
-    // ★★★ 修正点2: 分類タイトルを追加 ★★★
-    const title = document.createElement('h3');
-    title.textContent = `分類${index + 1}`;
-    container.appendChild(title);
-    
-    container.classList.add('hidden'); // 初期状態では隠す
-
-    const buttonList = document.createElement('div');
-    buttonList.id = `button-list-${index}`;
-    buttonList.classList.add('button-list');
-    container.appendChild(buttonList);
-
-    return container;
-}
-
-
-/**
- * フィルタボタンがクリックされたときの処理
- * @param {number} changedIndex - 変更があった分類のインデックス (0-5)
- * @param {string} value - 選択された値
- */
-function handleButtonClick(changedIndex, value) {
-    const currentValue = selectedFilters[changedIndex];
-
-    if (currentValue === value) {
-        // 同じボタンがクリックされた場合は、選択を解除
-        selectedFilters[changedIndex] = null;
+    if (currentLevel < CATEGORY_COLUMNS.length) {
+        // 分類レベルの表示 (タイル表示)
+        renderCategoryTiles(filteredData, currentCategory);
     } else {
-        // 別のボタンがクリックされた場合は、選択状態を更新
-        selectedFilters[changedIndex] = value;
+        // 最下層の商品詳細リスト表示
+        renderProductList(filteredData);
     }
-
-    // 変更された分類以降のフィルタをリセット（ボタンの選択状態もリセットするためnullに）
-    for (let i = changedIndex + 1; i < NUM_CATEGORIES; i++) {
-        selectedFilters[i] = null;
-    }
-
-    // 次の分類のフィルタを更新（ボタンを再描画）
-    updateFilters(changedIndex + 1);
-
-    // 選択された分類のボタンの見た目を更新
-    updateButtonVisuals(changedIndex);
-
-    // 結果の表示を更新
-    displayResults();
+    
+    updateBreadcrumb(); // パンくずリストを更新
 }
 
-/**
- * 特定の分類のボタンの選択状態を更新する
- * @param {number} index - 更新する分類のインデックス (0-5)
- */
-function updateButtonVisuals(index) {
-    const buttonList = document.getElementById(`button-list-${index}`);
-    if (!buttonList) return;
 
-    // 現在の選択値
-    const selectedValue = selectedFilters[index];
-    
-    // すべてのボタンの選択状態を更新
-    buttonList.querySelectorAll('.filter-button').forEach(button => {
-        if (button.textContent === selectedValue) {
-            button.classList.add('selected');
-        } else {
-            button.classList.remove('selected');
+/**
+ * 🧩 タイル形式で次の分類の選択肢を表示する
+ * @param {Array<Object>} data - フィルタリングされた商品データ
+ * @param {string} categoryColumn - 現在の階層の列名
+ */
+function renderCategoryTiles(data, categoryColumn) {
+    const categoryCounts = {};
+
+    // 次の分類の選択肢とその件数を集計
+    data.forEach(item => {
+        const key = item[categoryColumn];
+        if (key) {
+            categoryCounts[key] = (categoryCounts[key] || 0) + 1;
         }
+    });
+
+    // 選択肢がない場合は、商品リストに移動（稀なケースのフォールバック）
+    if (Object.keys(categoryCounts).length === 0) {
+        // 次の階層へ進む (強制的に商品リスト表示へ)
+        currentLevel++;
+        renderContent();
+        return;
+    }
+    
+    // タイルのレンダリング
+    contentArea.classList.remove('product-list');
+    
+    Object.keys(categoryCounts).sort().forEach(categoryValue => {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.innerHTML = `
+            <div class="tile-title">${categoryValue}</div>
+            <div class="tile-count">(${categoryCounts[categoryValue]}件)</div>
+        `;
+        tile.dataset.value = categoryValue;
+        tile.addEventListener('click', () => handleTileClick(categoryColumn, categoryValue));
+        contentArea.appendChild(tile);
     });
 }
 
 /**
- * フィルタと結果をすべてリセットする
+ * 📋 商品の詳細リストを表示する
+ * @param {Array<Object>} data - フィルタリングされた商品データ
  */
-function resetAll() {
-    selectedFilters.fill(null); // フィルタをリセット
+function renderProductList(data) {
+    contentArea.classList.add('product-list');
 
-    // すべてのカテゴリコンテナを非表示に戻す (分類0以外)
-    for (let i = 1; i < NUM_CATEGORIES; i++) {
-        document.getElementById(`category-container-${i}`).classList.add('hidden');
-        document.getElementById(`button-list-${i}`).innerHTML = ''; // ボタンもクリア
-    }
-    
-    // 分類1を再描画して選択を解除した状態にする
-    updateFilters(0);
-
-    // リセットボタンを非表示にする
-    resetButton.style.display = 'none'; 
-    
-    // 結果エリアを初期表示に戻す
-    resultsDiv.innerHTML = '<p>分類１を選択してください。</p>';
-}
-
-// --- 3. フィルタ更新ロジック ---
-
-/**
- * 次の分類のボタンリストを更新する
- * @param {number} nextIndex - 次にフィルタを更新する分類のインデックス (0-5)
- */
-function updateFilters(nextIndex) {
-    if (nextIndex > NUM_CATEGORIES) return;
-
-    // 現在の選択状態を取得 (nextIndexまでのフィルタを適用)
-    const currentFilters = {};
-    for (let i = 0; i < nextIndex; i++) {
-        if (selectedFilters[i] !== null) {
-            currentFilters[`分類${i + 1}`] = selectedFilters[i];
-        }
+    if (data.length === 0) {
+        contentArea.innerHTML = '<p>該当する商品が見つかりませんでした。</p>';
+        return;
     }
 
-    // 次の分類以降のコンテナとボタンリストをクリア
-    for (let i = nextIndex; i < NUM_CATEGORIES; i++) {
-        const container = document.getElementById(`category-container-${i}`);
-        const buttonList = document.getElementById(`button-list-${i}`);
+    data.forEach(item => {
+        const productItem = document.createElement('div');
+        productItem.className = 'product-item';
         
-        if (container) container.classList.add('hidden');
-        if (buttonList) buttonList.innerHTML = '';
+        let html = `<p class="product-code">品番: <strong>${item['品番']}</strong></p>`;
         
-        // nextIndex以降のselectedFiltersをリセット
-        if(i > nextIndex - 1) {
-            selectedFilters[i] = null;
-        }
-    }
-
-    // nextIndexが有効な範囲で、ボタンを生成
-    if (nextIndex < NUM_CATEGORIES) {
-        // 現在のフィルタ条件でデータを絞り込む
-        const filteredData = masterData.filter(row => {
-            return Object.keys(currentFilters).every(key => row[key] === currentFilters[key]);
+        // 分類情報 (見出し) を表示
+        CATEGORY_COLUMNS.forEach((col, index) => {
+            if (item[col]) {
+                html += `<p><strong>${col}:</strong> ${item[col]}</p>`;
+            }
         });
 
-        // 次の分類 (分類N) のユニークな値を取得
-        const nextCategoryKey = `分類${nextIndex + 1}`;
-        // 空欄を除去
-        const uniqueValues = [...new Set(filteredData.map(row => row[nextCategoryKey]))].filter(v => v !== ''); 
-        uniqueValues.sort(); // ソート
-
-        const nextContainer = document.getElementById(`category-container-${nextIndex}`);
-        const nextButtonList = document.getElementById(`button-list-${nextIndex}`);
-
-        if (uniqueValues.length > 0) {
-            // ボタンを生成
-            uniqueValues.forEach(value => {
-                const button = document.createElement('button');
-                button.classList.add('filter-button');
-                
-                // 選択状態の復元
-                if (selectedFilters[nextIndex] === value) {
-                    button.classList.add('selected'); 
-                }
-                
-                button.textContent = value;
-                button.addEventListener('click', () => handleButtonClick(nextIndex, value));
-                nextButtonList.appendChild(button);
-            });
-
-            nextContainer.classList.remove('hidden'); // コンテナを表示
-        } else {
-            nextContainer.classList.add('hidden'); // ボタンがない場合はコンテナを非表示
-        }
-    }
-
-    // リセットボタンの表示/非表示を更新
-    updateResetButtonVisibility();
+        // その他の詳細情報を表示
+        PRODUCT_COLUMNS.forEach(col => {
+            // 品番はすでに表示されているためスキップ
+            if (col.key !== '品番' && item[col.key]) {
+                html += `<p><strong>${col.label}:</strong> ${item[col.key]}</p>`;
+            }
+        });
+        
+        productItem.innerHTML = html;
+        contentArea.appendChild(productItem);
+    });
 }
 
 
-// --- 4. 結果表示ロジック ---
-
-function displayResults() {
-    const finalFilters = {};
-    let isFiltered = false;
-    for (let i = 0; i < NUM_CATEGORIES; i++) {
-        if (selectedFilters[i] !== null) {
-            finalFilters[`分類${i + 1}`] = selectedFilters[i];
-            isFiltered = true;
-        }
-    }
-    
-    // 条件未選択時
-    if (!isFiltered) {
-        resultsDiv.innerHTML = '<p>分類１を選択してください。</p>';
-        updateResetButtonVisibility();
-        return;
-    }
-
-    // 最終フィルタリング
-    const finalFilteredData = masterData.filter(row => {
-        return Object.keys(finalFilters).every(key => row[key] === finalFilters[key]);
-    });
-
-    if (finalFilteredData.length === 0) {
-        resultsDiv.innerHTML = '<p>該当する商品が見つかりません。</p>';
-        updateResetButtonVisibility();
-        return;
-    }
-    
-    // 結果をテーブルで表示
-    // CSVヘッダー（品番、色、備考1、備考2）に合わせて<th>タグを調整してください。
-    let html = `<p><strong>${finalFilteredData.length}件</strong> の商品が見つかりました。</p>
-        <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>分類１</th><th>分類２</th><th>分類３</th><th>分類４</th><th>分類５</th><th>分類６</th><th>品番</th><th>色</th><th>備考１</th><th>備考２</th>
-                </tr>
-            </thead>
-            <tbody>`;
-
-    finalFilteredData.forEach(row => {
-        // row['色']、row['備考１']、row['備考２']がCSVに存在しない場合は空文字を表示
-        html += `
-            <tr>
-                <td>${row['分類１'] || ''}</td>
-                <td>${row['分類２'] || ''}</td>
-                <td>${row['分類３'] || ''}</td>
-                <td>${row['分類４'] || ''}</td>
-                <td>${row['分類５'] || ''}</td>
-                <td>${row['分類６'] || ''}</td>
-                <td><strong>${row['品番'] || ''}</strong></td>
-                <td>${row['色'] || ''}</td>
-                <td>${row['備考１'] || ''}</td>
-                <td>${row['備考２'] || ''}</td>
-            </tr>
-        `;
-    });
-
-    html += `
-            </tbody>
-        </table>
-        </div>
-    `;
-
-    resultsDiv.innerHTML = html;
-    updateResetButtonVisibility();
+/**
+ * 👆 タイルがクリックされたときの処理
+ * @param {string} column - クリックされた分類の列名
+ * @param {string} value - クリックされた分類の値
+ */
+function handleTileClick(column, value) {
+    currentLevel++; // 階層を深くする
+    currentFilters[column] = value; // 絞り込み条件を追加
+    renderContent();
 }
 
 /**
- * 選択中のフィルタがある場合にリセットボタンを表示する
+ * 🗺️ パンくずリストを更新する
  */
-function updateResetButtonVisibility() {
-    // 選択中のフィルタが一つでもあればtrue
-    const isAnyFilterSelected = selectedFilters.some(filter => filter !== null); 
-    resetButton.style.display = isAnyFilterSelected ? 'block' : 'none';
+function updateBreadcrumb() {
+    breadcrumbContainer.innerHTML = '';
+    
+    // 0: 全て
+    createCrumb('全て', 0);
+    
+    // 1以上: 各分類
+    let currentPath = {};
+    for (let i = 0; i < currentLevel; i++) {
+        const column = CATEGORY_COLUMNS[i];
+        if (currentFilters[column]) {
+            currentPath[column] = currentFilters[column];
+            createCrumb(currentFilters[column], i + 1, { ...currentPath });
+        } else {
+            // フィルタが設定されていない階層以降は表示しない
+            break;
+        }
+    }
+}
+
+/**
+ * 🥖 パンくずリストの要素を作成する
+ * @param {string} text - 表示テキスト
+ * @param {number} level - 階層レベル
+ * @param {Object} [filters={}] - その階層に戻るためのフィルター条件
+ */
+function createCrumb(text, level, filters = {}) {
+    const crumb = document.createElement('span');
+    crumb.className = 'crumb';
+    crumb.textContent = text;
+    crumb.dataset.level = level;
+    
+    if (level <= currentLevel) {
+        crumb.addEventListener('click', () => handleCrumbClick(level, filters));
+    }
+    
+    breadcrumbContainer.appendChild(crumb);
+}
+
+/**
+ * ↩️ パンくずリストの要素がクリックされたときの処理
+ * @param {number} targetLevel - 戻りたい階層レベル
+ * @param {Object} targetFilters - 戻る階層の絞り込み条件
+ */
+function handleCrumbClick(targetLevel, targetFilters) {
+    currentLevel = targetLevel;
+    currentFilters = {};
+    
+    // 戻る階層までのフィルタ条件を再設定
+    for (let i = 0; i < targetLevel; i++) {
+        const column = CATEGORY_COLUMNS[i];
+        if (targetFilters[column]) {
+            currentFilters[column] = targetFilters[column];
+        }
+    }
+    
+    renderContent();
 }

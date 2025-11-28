@@ -1,177 +1,160 @@
-/* すべての要素のボックスモデルをborder-boxに設定 */
-*, *::before, *::after {
-    box-sizing: border-box;
-}
-
+/* 基本設定 */
 body {
-    font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    font-family: sans-serif;
     margin: 0;
-    padding: 20px; 
-    background-color: #f7f7f7;
-}
-
-/* バナー画像（PC: 12.5%幅, 中央寄せ） */
-#main-banner {
-    width: 12.5%; 
-    height: auto;
-    display: block; 
-    margin: 0 auto 20px auto; 
-    border-radius: 4px; 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
-}
-
-h1 {
-    font-size: 28px;
-    margin-bottom: 15px;
-    text-align: center;
+    padding: 0;
+    background-color: #f4f7f6;
     color: #333;
 }
-h2 {
-    font-size: 20px;
+
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* フィルタエリア全体 */
-#filters {
-    padding: 15px; 
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+main {
+    padding: 20px;
+    max-width: 1200px; /* PCでの最大幅 */
+    margin: 0 auto;
+}
+
+/* 🍞 パンくずリスト */
+#breadcrumb {
     margin-bottom: 20px;
-}
-
-/* カテゴリコンテナ（分類１、分類２...のセクション全体）のスタイル */
-.category-container {
+    font-size: 1.1em;
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background-color: #fcfcfc;
+    background-color: #e9ecef;
+    border-radius: 5px;
 }
 
-/* 分類の見出し */
-.category-container h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 18px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 5px;
-    color: #555;
-}
-
-/* ボタンリスト（選択肢のボタンを囲む部分）のスタイル */
-.button-list {
-    display: flex; /* ボタンを横に並べる */
-    flex-wrap: wrap; /* 画面幅が狭くなったら折り返す */
-    gap: 8px; /* ボタン間の隙間 */
-    padding: 5px 0;
-}
-
-/* 個々の選択肢ボタンのスタイル */
-.filter-button {
-    flex-grow: 0; 
-    padding: 8px 12px;
-    border: 1px solid #00796b; /* テーマカラー */
-    background-color: #e0f2f1;
-    color: #00796b;
-    border-radius: 20px; /* 角を丸くする */
+.crumb {
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-    white-space: nowrap; /* テキストの折り返しを防ぐ */
-}
-
-/* 選択済みボタンのスタイル */
-.filter-button.selected {
-    background-color: #00796b; 
-    color: white;
+    color: #007bff;
+    text-decoration: none;
+    margin-right: 5px;
     font-weight: bold;
-    border-color: #004d40;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* ホバー時のスタイル */
-.filter-button:not(.selected):hover {
-    background-color: #b2dfdb;
-    border-color: #004d40;
+.crumb:hover {
+    text-decoration: underline;
 }
 
-/* 選択済みボタンのホバー時のスタイル */
-.filter-button.selected:hover {
-    background-color: #004d40; 
-    border-color: #004d40; 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transform: translateY(-1px);
+.crumb:not(:last-child)::after {
+    content: ' > ';
+    color: #6c757d;
+    font-weight: normal;
 }
 
-/* リセットボタン */
-#reset-all {
-    width: 100%;
-    padding: 12px; 
-    margin-top: 20px;
-    background-color: #f44336; /* 赤色 */
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.crumb:last-child {
+    color: #495057;
+    cursor: default;
     font-weight: bold;
-    font-size: 16px;
-    transition: background-color 0.2s;
 }
 
-#reset-all:hover {
-    background-color: #d32f2f;
+/* 🖼️ コンテンツエリア (タイル/リスト表示) */
+#content-area {
+    display: grid;
+    /* PC: 4列、タブレット: 3列、スマホ: 1列または2列 (メディアクエリで調整) */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
 }
 
-/* 結果エリア */
-#results {
-    background-color: #fff;
-    padding: 15px; 
+/* タイル共通スタイル */
+.tile {
+    background-color: white;
+    padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+    cursor: pointer;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-/* テーブルを囲むコンテナ。スマホで横スクロール可能にする */
-#results .table-container {
-    overflow-x: auto;
-    width: 100%;
+.tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* 結果のテーブルのスタイル */
-table {
-    width: 100%;
-    min-width: 600px; 
-    border-collapse: collapse;
-    margin: 10px 0;
-    font-size: 16px; 
-}
-
-table th, table td {
-    padding: 12px 8px; 
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-table th {
-    background-color: #f0f0f0;
+.tile-title {
+    font-size: 1.2em;
     font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+    word-break: break-word; /* 長い名称でも折り返す */
 }
 
-/* 偶数行の背景色 */
-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+.tile-count {
+    font-size: 0.9em;
+    color: #6c757d;
 }
 
-/* レスポンシブ対応: バナー画像をモバイルでは非表示に */
-@media (max-width: 768px) {
-    #main-banner {
-        width: 0; /* 幅をゼロにして非表示 */
-        height: 0;
-        margin: 0;
-        visibility: hidden;
+/* 📋 商品詳細リストのスタイル */
+.product-list {
+    /* タイル表示からリスト表示に切り替えるため、grid-template-columnsを上書き */
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.product-item {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid #28a745;
+}
+
+.product-item p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.product-item strong {
+    font-weight: bold;
+    display: inline-block;
+    min-width: 60px; /* 見出しの幅を揃える */
+}
+
+.product-item .product-code {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+
+/* 📱 レスポンシブ対応 (スマホ/タブレット) */
+
+/* タブレット (600px以上) */
+@media (min-width: 600px) and (max-width: 992px) {
+    #content-area {
+        /* タブレットでは最大3列 */
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
 }
 
-/* 表示を隠すユーティリティクラス */
-.hidden {
-    display: none !important;
+/* スマホ (600px未満) */
+@media (max-width: 599px) {
+    main {
+        padding: 10px;
+    }
+    header h1 {
+        font-size: 1.5em;
+    }
+    #content-area {
+        /* スマホでは1列表示で大きく見やすく */
+        grid-template-columns: 1fr;
+    }
+    .tile {
+        padding: 15px;
+    }
+    .product-item {
+        font-size: 0.9em;
+    }
 }

@@ -2,29 +2,24 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>商品マスタ検索</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    
-    <link rel="stylesheet" href="style.css"> 
-    
-    <link rel="icon" href="favicon.ico" type="image/x-icon"> 
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <img src="バナー.jpg" id="main-banner" alt="バナー画像">
-    
-    <h1>商品絞り込み検索</h1>
-    
-    <div id="filters">
-        <div id="category-containers"></div>
+    <header>
+        <h1>商品マスタ検索</h1>
+    </header>
 
-        <button id="reset-all" class="reset-button" style="display: none;">すべての条件をリセット</button>
-    </div>    
-    <hr>
-    
-    <h2>検索結果</h2>
-    <div id="results">
-        <p>分類１を選択してください。</p>
-    </div>
+    <main>
+        <nav id="breadcrumb">
+            <span class="crumb" data-level="0">全て</span>
+        </nav>
+
+        <div id="content-area">
+            <p id="loading-message">データを読み込み中...</p>
+        </div>
+    </main>
 
     <script src="script.js"></script>
 </body>
