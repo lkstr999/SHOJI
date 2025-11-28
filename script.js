@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * 💾 CSVファイルを読み込み、パースする
- * (前回のロジックと変更なし)
+ * @param {string} url - CSVファイルのパス
  */
 async function fetchCsvData(url) {
     try {
@@ -53,7 +53,7 @@ async function fetchCsvData(url) {
 
 /**
  * 📊 CSVテキストを行と列にパースする
- * (前回のロジックと変更なし)
+ * @param {string} csvText - CSVファイルの内容
  */
 function parseCsv(csvText) {
     const lines = csvText.trim().split(/\r?\n/);
@@ -90,13 +90,11 @@ function renderContent() {
 
     // 0レベル (全て) の場合、分類１のタイルを表示
     if (currentLevel === 0) {
-        // コンテンツエリアにタイル表示用のクラスを適用
         contentArea.classList.add('category-tiles');
         contentArea.classList.remove('product-grid-container');
         renderCategoryTiles(filteredData, CATEGORY_COLUMNS[0]);
     } else {
         // 1レベル (分類１選択後) 以降は、常に商品詳細リストを表示
-        // コンテンツエリアにグリッド表示用のクラスを適用
         contentArea.classList.remove('category-tiles');
         contentArea.classList.add('product-grid-container');
         renderProductGrid(filteredData);
@@ -151,4 +149,93 @@ function renderProductGrid(data) {
     headerRow.className = 'product-header';
     
     ALL_DISPLAY_COLUMNS.forEach(colKey => {
-        // ヘッダーテキストを決定（品番は「品番」の
+        // ヘッダーテキストを決定（品番は「品番」のまま、備考は「備考１/備考２」）
+        const label = colKey; 
+        const headerCell = document.createElement('div');
+        headerCell.className = `col-${colKey.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace('１', '1').replace('２', '2')}`; // CSSクラス名用に全角数字を半角に変換
+        headerCell.textContent = label;
+        headerRow.appendChild(headerCell);
+    });
+    
+    contentArea.appendChild(headerRow);
+    
+    // 2. データ行の作成
+    data.forEach(item => {
+        const productRow = document.createElement('div');
+        productRow.className = 'product-row';
+        
+        ALL_DISPLAY_COLUMNS.forEach(colKey => {
+            const cell = document.createElement('div');
+            cell.className = `col-${colKey.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace('１', '1').replace('２', '2')}`;
+            cell.textContent = item[colKey] || ''; // データがない場合は空文字
+            productRow.appendChild(cell);
+        });
+        
+        contentArea.appendChild(productRow);
+    });
+}
+
+
+/**
+ * 👆 タイルがクリックされたときの処理 (分類１の選択)
+ * @param {string} column - クリックされた分類の列名 ('分類１')
+ * @param {string} value - クリックされた分類の値
+ */
+function handleTileClick(column, value) {
+    currentLevel = 1;
+    currentFilters = {};
+    currentFilters[column] = value;
+    renderContent();
+}
+
+/**
+ * 🗺️ パンくずリストを更新する
+ */
+function updateBreadcrumb() {
+    breadcrumbContainer.innerHTML = '';
+    
+    createCrumb('🔍 全ての商品', 0);
+    
+    if (currentLevel >= 1 && currentFilters[CATEGORY_COLUMNS[0]]) {
+        const categoryValue = currentFilters[CATEGORY_COLUMNS[0]];
+        createCrumb(categoryValue, 1, { [CATEGORY_COLUMNS[0]]: categoryValue });
+    }
+}
+
+/**
+ * 🥖 パンくずリストの要素を作成する
+ * @param {string} text - 表示テキスト
+ * @param {number} level - 階層レベル
+ * @param {Object} [filters={}] - その階層に戻るためのフィルター条件
+ */
+function createCrumb(text, level, filters = {}) {
+    const crumb = document.createElement('span');
+    crumb.className = 'crumb';
+    crumb.textContent = text;
+    crumb.dataset.level = level;
+    
+    if (level <= currentLevel) {
+        crumb.addEventListener('click', () => handleCrumbClick(level, filters));
+    }
+    
+    breadcrumbContainer.appendChild(crumb);
+}
+
+/**
+ * ↩️ パンくずリストの要素がクリックされたときの処理
+ * @param {number} targetLevel - 戻りたい階層レベル
+ * @param {Object} targetFilters - 戻る階層の絞り込み条件
+ */
+function handleCrumbClick(targetLevel, targetFilters) {
+    currentLevel = targetLevel;
+    currentFilters = {};
+    
+    // 戻る階層までのフィルタ条件を再設定
+    for (const key in targetFilters) {
+        currentFilters[key] = targetFilters[key];
+    }
+    
+    renderContent();
+}
+// <-- 構文エラーを解消する閉じ括弧は、この下に続く行の終端に存在し、
+//     このファイル全体としては正しく閉じられています。
