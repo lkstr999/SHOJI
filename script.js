@@ -4,7 +4,7 @@ const CSV_FILE_PATH = '商品マスタ.csv';
 const NUM_CATEGORIES = 6;
 let masterData = [];
 
-// ★★★ 変更: 現在の選択状態を保持する配列 (index 0=分類1, index 5=分類6) ★★★
+// 現在の選択状態を保持する配列 (index 0=分類1, index 5=分類6)
 // null: 未選択, '値': 選択済み
 let selectedFilters = new Array(NUM_CATEGORIES).fill(null); 
 
@@ -12,7 +12,7 @@ const categoryContainer = document.getElementById('category-containers');
 const resultsDiv = document.getElementById('results');
 const resetButton = document.getElementById('reset-all');
 
-// --- 1. 初期化処理（認証なしで即時実行） ---
+// --- 1. 初期化処理 ---
 initialize();
 
 function initialize() {
@@ -29,44 +29,39 @@ function initialize() {
             resultsDiv.innerHTML = '<p style="color:red;">データを読み込めませんでした。CSVファイルが正しい場所にあるか、エンコードがUTF-8か確認してください。</p>';
         });
 
-    // ★★★ 変更: リセットボタンにイベントリスナーを設定 ★★★
+    // リセットボタンにイベントリスナーを設定
     resetButton.addEventListener('click', resetAll);
 }
 
 /**
- * 簡易CSVパーサ（変更なし）
+ * 簡易CSVパーサ (修正済み: 空欄があっても正しく読み込む)
  */
 function parseCSV(csv) {
-    // ... (関数の中身は変更なし) ...
-    const lines = csv.split(/\r\n|\n/);
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    // 改行コード（\r\nと\n）の両方に対応して行分割
+    const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+    if (lines.length === 0) return [];
+    
+    // 1行目をヘッダーとして抽出
+    const rawHeaders = lines[0].split(',');
+    const headers = rawHeaders.map(h => 
+        h.trim().replace(/^"|"$/g, '').replace(/^\uFEFF/, '') 
+    );
+    
     const data = [];
-
-    // ヘッダーが8つあることを確認 (分類1～6, 品番, 色)
-    if (headers.length < 8) {
-        console.error('CSVファイルのヘッダー数が不足しています。');
-        return [];
-    }
-
-    // ★★★ ループ開始 ★★★
+    
+    // データ格納ループ
     for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (!line.trim()) continue;
-
-        // 正規表現を使ってカンマと二重引用符に対応した分割
-        const values = line.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);
-        if (!values || values.length !== headers.length) continue; 
-
+        // 単純なsplit(',')に戻すことで、空欄(,,)も正しく空文字として取得します
+        const values = lines[i].split(',');
+        
+        // 列数が足りない行があっても、可能な限り読み込むように柔軟に対応
         const row = {};
         for (let j = 0; j < headers.length; j++) {
             row[headers[j]] = (values[j] || '').trim().replace(/^"|"$/g, '');
         }
         data.push(row);
     }
-    // ★★★ ループここまで ★★★
-
+    
     return data;
 }
 
@@ -74,9 +69,7 @@ function parseCSV(csv) {
 // --- 2. 絞り込み処理 ---
 
 /**
- * ★★★ 変更: ボタンをクリックしたときの処理 ★★★
- * * @param {number} changedIndex - 選択された分類のインデックス (0～5)
- * @param {string} value - 選択された値
+ * ボタンをクリックしたときの処理
  */
 function handleTileClick(changedIndex, value) {
     
@@ -111,8 +104,7 @@ function resetAll() {
 }
 
 /**
- * 次の分類（nextIndex）のボタンリストを生成して表示する
- * * @param {number} nextIndex - 次に表示する分類のインデックス (0～5)
+ * 分類のボタンリストを生成して表示する
  */
 function updateFilters(nextIndex) {
     
@@ -129,10 +121,10 @@ function updateFilters(nextIndex) {
         return Object.keys(currentFilters).every(key => row[key] === currentFilters[key]);
     });
 
-    // 表示する分類のボタンリストを生成
+    // HTMLを生成
     let html = '';
     
-    // 現在選択されているフィルタまでを再表示
+    // 1. 既に選択済みの分類を表示（クリックで変更可能）
     for (let i = 0; i < nextIndex; i++) {
         if (selectedFilters[i]) {
             const categoryName = `分類${i + 1}`;
@@ -140,7 +132,7 @@ function updateFilters(nextIndex) {
 
             html += `
                 <div id="category-${i}" class="filter-category-container">
-                    <p class="category-title">${categoryName}: <span>選択済み</span></p>
+                    <p class="category-title">${categoryName}</p>
                     <div class="tile-list" data-index="${i}">
                         <button class="category-tile selected" data-value="${selectedValue}">${selectedValue}</button>
                     </div>
@@ -149,20 +141,21 @@ function updateFilters(nextIndex) {
         }
     }
 
-    // 次の分類（nextIndex）のボタンリストを生成
+    // 2. 次に選択すべき分類を表示
     if (nextIndex < NUM_CATEGORIES) {
         const nextCategoryName = `分類${nextIndex + 1}`;
+        // ユニークな値を取得（空欄を除く）
         const uniqueValues = new Set(filteredData.map(row => row[nextCategoryName]).filter(v => v && v.trim() !== ''));
 
         if (uniqueValues.size > 0) {
             html += `
                 <div id="category-${nextIndex}" class="filter-category-container">
-                    <p class="category-title">${nextCategoryName}を選択してください</p>
+                    <p class="category-title">${nextCategoryName}を選択</p>
                     <div class="tile-list" data-index="${nextIndex}">
             `;
             
-            // ユニークな値ごとにボタンを生成
-            uniqueValues.forEach(value => {
+            // 値のリストをソートしてボタンを生成
+            [...uniqueValues].sort().forEach(value => {
                 html += `<button class="category-tile" data-index="${nextIndex}" data-value="${value}">${value}</button>`;
             });
 
@@ -176,17 +169,14 @@ function updateFilters(nextIndex) {
     // DOMの更新
     categoryContainer.innerHTML = html;
     
-    // ★★★ 変更: 新しく生成されたボタンにクリックイベントを設定 ★★★
+    // 新しく生成されたボタンにクリックイベントを設定
     document.querySelectorAll('.tile-list button').forEach(button => {
-        // 既に選択済みのボタン（selectedクラスを持つボタン）にはイベントを再設定しない
-        if (!button.classList.contains('selected')) {
-            const index = parseInt(button.dataset.index);
-            const value = button.dataset.value;
-            button.addEventListener('click', () => handleTileClick(index, value));
-        }
+        const index = parseInt(button.dataset.index);
+        const value = button.dataset.value;
+        button.addEventListener('click', () => handleTileClick(index, value));
     });
 
-    // リセットボタンの表示/非表示を制御
+    // リセットボタンの表示制御
     if (selectedFilters.some(val => val !== null)) {
         resetButton.style.display = 'block';
     } else {
@@ -199,7 +189,6 @@ function updateFilters(nextIndex) {
  */
 function displayResults() {
     
-    // ★★★ 変更: selectedFilters配列からフィルタリング条件を取得 ★★★
     const finalFilters = {};
     for (let i = 0; i < NUM_CATEGORIES; i++) {
         if (selectedFilters[i]) {
@@ -207,7 +196,7 @@ function displayResults() {
         }
     }
     
-    // フィルタ条件が一つも選択されていない場合は、初期メッセージを表示
+    // 条件未選択時
     if (Object.keys(finalFilters).length === 0) {
         resultsDiv.innerHTML = '<p>分類１を選択してください。</p>';
         return;
