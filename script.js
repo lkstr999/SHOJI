@@ -3,8 +3,14 @@
 const CSV_FILE_PATH = '商品マスタ.csv';
 const NUM_CATEGORIES = 6;
 let masterData = [];
-// 分類１の選択値を保持するためのグローバル変数
-let selectedCategory1 = '';
+
+// ★★★ 変更: 現在の選択状態を保持する配列 (index 0=分類1, index 5=分類6) ★★★
+// null: 未選択, '値': 選択済み
+let selectedFilters = new Array(NUM_CATEGORIES).fill(null); 
+
+const categoryContainer = document.getElementById('category-containers');
+const resultsDiv = document.getElementById('results');
+const resetButton = document.getElementById('reset-all');
 
 // --- 1. 初期化処理（認証なしで即時実行） ---
 initialize();
@@ -15,259 +21,209 @@ function initialize() {
         .then(response => response.text())
         .then(csvText => {
             masterData = parseCSV(csvText);
-            // 2. 分類1をタイルで表示
-            renderCategoryTiles(); 
-            
-            // 3. 分類２以降のプルダウンとリセットボタンにイベントリスナーを設定 (select-1から開始)
-            for (let i = 1; i < NUM_CATEGORIES; i++) {
-                const select = document.getElementById(`select-${i}`);
-                if (select) { 
-                    select.addEventListener('change', () => handleFilterChange(i));
-                }
-            }
-            
-            // 4. 新しいボタンのイベントリスナーを設定
-            setupButtonListeners();
+            // 2. 分類1のボタンリストを初期化
+            updateFilters(0);
         })
         .catch(error => {
             console.error('CSVファイルの読み込みエラー:', error);
-            document.getElementById('results').innerHTML = '<p style="color:red;">データを読み込めませんでした。CSVファイルが正しい場所にあるか、エンコードがUTF-8か確認してください。</p>';
+            resultsDiv.innerHTML = '<p style="color:red;">データを読み込めませんでした。CSVファイルが正しい場所にあるか、エンコードがUTF-8か確認してください。</p>';
         });
-}
 
-// ボタンのイベントリスナー設定
-function setupButtonListeners() {
-    // 分類１に戻るボタン
-    const backButton = document.getElementById('back-to-tiles');
-    if (backButton) {
-        backButton.addEventListener('click', backToCategoryTiles);
-    }
-
-    // 各プルダウンのリセットボタン
-    document.querySelectorAll('.reset-filter').forEach(button => {
-        button.addEventListener('click', (e) => {
-            // data-index="1"などの値を取得
-            const index = parseInt(e.target.dataset.index); 
-            resetFilter(index);
-        });
-    });
-}
-
-// 分類１のタイル画面に戻り、選択をリセットする
-function backToCategoryTiles() {
-    selectedCategory1 = ''; // 分類１の選択をリセット
-
-    // UIの切り替え
-    document.getElementById('select-filters').style.display = 'none'; // プルダウンを隠す
-    document.getElementById('category-tiles').style.display = 'flex'; // タイルを表示
-    
-    // 分類２以降のプルダウンを空にする
-    for (let i = 1; i < NUM_CATEGORIES; i++) {
-        const select = document.getElementById(`select-${i}`);
-        select.innerHTML = '';
-        select.disabled = true;
-    }
-
-    // 結果エリアを初期メッセージに戻す
-    document.getElementById('results').innerHTML = '<p>分類１を選択してください。</p>';
-}
-
-// 指定したインデックスのプルダウンをリセットする
-function resetFilter(indexToReset) {
-    const selectToReset = document.getElementById(`select-${indexToReset}`);
-    if (selectToReset) {
-        selectToReset.value = ''; // 値をリセット（---）
-    }
-
-    // 自身以降のすべてのプルダウンをリセット
-    for (let i = indexToReset + 1; i < NUM_CATEGORIES; i++) {
-        const nextSelect = document.getElementById(`select-${i}`);
-        nextSelect.innerHTML = '<option value="">---</option>';
-        nextSelect.disabled = true;
-    }
-    
-    // フィルタリングを再実行
-    updateFilters(indexToReset);
-    displayResults();
-}
-
-// 分類１のタイルを生成・表示する
-function renderCategoryTiles() {
-    const tileContainer = document.getElementById('category-tiles');
-    tileContainer.innerHTML = '<h2>分類１を選択してください</h2>';
-    tileContainer.style.flexDirection = 'column'; 
-    
-    const categoryKey = '分類１';
-    const uniqueOptions = [...new Set(masterData.map(row => row[categoryKey]))].sort();
-
-    // タイルを格納する内部コンテナ
-    const tilesWrapper = document.createElement('div');
-    tilesWrapper.style.display = 'flex';
-    tilesWrapper.style.flexWrap = 'wrap';
-    tilesWrapper.style.gap = '15px';
-    tilesWrapper.style.width = '100%';
-
-    uniqueOptions.forEach(option => {
-        if (!option) return; 
-
-        const tile = document.createElement('div');
-        tile.className = 'category-tile';
-        tile.textContent = option;
-        
-        tile.addEventListener('click', () => handleCategoryTileClick(option));
-        
-        tilesWrapper.appendChild(tile);
-    });
-
-    tileContainer.appendChild(tilesWrapper);
-    tileContainer.style.display = 'flex'; 
-    tileContainer.style.flexDirection = 'column'; 
-}
-
-// 分類１のタイルがクリックされたときの処理
-function handleCategoryTileClick(categoryName) {
-    selectedCategory1 = categoryName;
-
-    // 1. UIの切り替え
-    document.getElementById('category-tiles').style.display = 'none';
-    document.getElementById('select-filters').style.display = 'block'; 
-    
-    // 2. 分類２ (select-1) のプルダウンを更新
-    updateFilters(1); 
-    
-    // 3. 結果を表示
-    displayResults();
+    // ★★★ 変更: リセットボタンにイベントリスナーを設定 ★★★
+    resetButton.addEventListener('click', resetAll);
 }
 
 /**
- * 簡易CSVパーサ
+ * 簡易CSVパーサ（変更なし）
  */
 function parseCSV(csv) {
-    const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
-    if (lines.length === 0) return [];
-    
-    const rawHeaders = lines[0].split(',');
-    const headers = rawHeaders.map(h => 
-        h.trim().replace(/^"|"$/g, '').replace(/^\uFEFF/, '') 
-    );
-    
+    // ... (関数の中身は変更なし) ...
+    const lines = csv.split(/\r\n|\n/);
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
     const data = [];
+
+    // ヘッダーが8つあることを確認 (分類1～6, 品番, 色)
+    if (headers.length < 8) {
+        console.error('CSVファイルのヘッダー数が不足しています。');
+        return [];
+    }
+
+    // ★★★ ループ開始 ★★★
     for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',');
+        const line = lines[i];
+        if (!line.trim()) continue;
+
+        // 正規表現を使ってカンマと二重引用符に対応した分割
+        const values = line.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);
+        if (!values || values.length !== headers.length) continue; 
+
         const row = {};
         for (let j = 0; j < headers.length; j++) {
             row[headers[j]] = (values[j] || '').trim().replace(/^"|"$/g, '');
         }
         data.push(row);
     }
+    // ★★★ ループここまで ★★★
+
     return data;
 }
 
 
 // --- 2. 絞り込み処理 ---
 
-// 分類２以降のプルダウンが変更されたときの処理
-function handleFilterChange(changedIndex) {
-    // 変更されたプルダウンより後ろのものをリセット
-    for (let i = changedIndex + 1; i < NUM_CATEGORIES; i++) {
-        const nextSelect = document.getElementById(`select-${i}`);
-        nextSelect.innerHTML = '<option value="">---</option>';
-        nextSelect.disabled = true;
-    }
+/**
+ * ★★★ 変更: ボタンをクリックしたときの処理 ★★★
+ * * @param {number} changedIndex - 選択された分類のインデックス (0～5)
+ * @param {string} value - 選択された値
+ */
+function handleTileClick(changedIndex, value) {
     
+    // 既に選択されていた値と同じ場合は、リセットとして扱う
+    if (selectedFilters[changedIndex] === value) {
+        selectedFilters[changedIndex] = null;
+    } else {
+        // 新しい値を選択
+        selectedFilters[changedIndex] = value;
+    }
+
+    // 選択されたインデックスより後の分類の選択状態をすべてリセットする
+    for (let i = changedIndex + 1; i < NUM_CATEGORIES; i++) {
+        selectedFilters[i] = null;
+    }
+
+    // 次のフィルタを更新・表示する
     updateFilters(changedIndex + 1);
+    
+    // 結果を表示する
     displayResults();
 }
 
-function updateFilters(nextIndex) {
-    const currentFilters = {};
-    
-    // 分類１の選択をフィルタに追加
-    if (selectedCategory1) {
-        currentFilters['分類１'] = selectedCategory1;
-    }
+/**
+ * すべての分類の選択をリセット
+ */
+function resetAll() {
+    selectedFilters.fill(null);
+    updateFilters(0);
+    resetButton.style.display = 'none';
+    resultsDiv.innerHTML = '<p>分類１を選択してください。</p>';
+}
 
-    // 分類２以降のプルダウンの選択をフィルタに追加
-    // select-1 は分類２、i=1 から i < nextIndex までループ
-    for (let i = 1; i < nextIndex; i++) {
-        const selectElement = document.getElementById(`select-${i}`);
-        const selectedValue = selectElement.value;
-        if (selectedValue) {
-            currentFilters[`分類${i + 1}`] = selectedValue;
+/**
+ * 次の分類（nextIndex）のボタンリストを生成して表示する
+ * * @param {number} nextIndex - 次に表示する分類のインデックス (0～5)
+ */
+function updateFilters(nextIndex) {
+    
+    // 現在の選択状態に基づいてフィルタリング
+    const currentFilters = {};
+    for (let i = 0; i < nextIndex; i++) {
+        if (selectedFilters[i]) {
+            currentFilters[`分類${i + 1}`] = selectedFilters[i];
         }
     }
     
+    // フィルタリング対象のデータ
     const filteredData = masterData.filter(row => {
         return Object.keys(currentFilters).every(key => row[key] === currentFilters[key]);
     });
 
-    const nextCategoryKey = `分類${nextIndex + 1}`; 
-    const uniqueOptions = [...new Set(filteredData.map(row => row[nextCategoryKey]))].sort();
-
-    const nextSelect = document.getElementById(`select-${nextIndex}`);
+    // 表示する分類のボタンリストを生成
+    let html = '';
     
-    // nextSelect は select-1 (分類２) から select-5 (分類６) まで
-    if (nextSelect) {
-        nextSelect.innerHTML = '';
-        
-        if (nextIndex < NUM_CATEGORIES) {
-            nextSelect.disabled = false;
-            nextSelect.innerHTML += `<option value="">--- 分類${nextIndex + 1}を選択 ---</option>`;
-            
-            uniqueOptions.forEach(option => {
-                nextSelect.innerHTML += `<option value="${option}">${option || '（空欄）'}</option>`;
-            });
+    // 現在選択されているフィルタまでを再表示
+    for (let i = 0; i < nextIndex; i++) {
+        if (selectedFilters[i]) {
+            const categoryName = `分類${i + 1}`;
+            const selectedValue = selectedFilters[i];
 
-        } else {
-            nextSelect.disabled = true;
+            html += `
+                <div id="category-${i}" class="filter-category-container">
+                    <p class="category-title">${categoryName}: <span>選択済み</span></p>
+                    <div class="tile-list" data-index="${i}">
+                        <button class="category-tile selected" data-value="${selectedValue}">${selectedValue}</button>
+                    </div>
+                </div>
+            `;
         }
     }
 
-    if (nextIndex > NUM_CATEGORIES) {
-        displayResults();
+    // 次の分類（nextIndex）のボタンリストを生成
+    if (nextIndex < NUM_CATEGORIES) {
+        const nextCategoryName = `分類${nextIndex + 1}`;
+        const uniqueValues = new Set(filteredData.map(row => row[nextCategoryName]).filter(v => v && v.trim() !== ''));
+
+        if (uniqueValues.size > 0) {
+            html += `
+                <div id="category-${nextIndex}" class="filter-category-container">
+                    <p class="category-title">${nextCategoryName}を選択してください</p>
+                    <div class="tile-list" data-index="${nextIndex}">
+            `;
+            
+            // ユニークな値ごとにボタンを生成
+            uniqueValues.forEach(value => {
+                html += `<button class="category-tile" data-index="${nextIndex}" data-value="${value}">${value}</button>`;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // DOMの更新
+    categoryContainer.innerHTML = html;
+    
+    // ★★★ 変更: 新しく生成されたボタンにクリックイベントを設定 ★★★
+    document.querySelectorAll('.tile-list button').forEach(button => {
+        // 既に選択済みのボタン（selectedクラスを持つボタン）にはイベントを再設定しない
+        if (!button.classList.contains('selected')) {
+            const index = parseInt(button.dataset.index);
+            const value = button.dataset.value;
+            button.addEventListener('click', () => handleTileClick(index, value));
+        }
+    });
+
+    // リセットボタンの表示/非表示を制御
+    if (selectedFilters.some(val => val !== null)) {
+        resetButton.style.display = 'block';
+    } else {
+        resetButton.style.display = 'none';
     }
 }
 
-
-// --- 3. 結果表示処理 ---
-
+/**
+ * 最終的な結果を表示する
+ */
 function displayResults() {
-    const resultsDiv = document.getElementById('results');
     
+    // ★★★ 変更: selectedFilters配列からフィルタリング条件を取得 ★★★
     const finalFilters = {};
+    for (let i = 0; i < NUM_CATEGORIES; i++) {
+        if (selectedFilters[i]) {
+            finalFilters[`分類${i + 1}`] = selectedFilters[i];
+        }
+    }
+    
+    // フィルタ条件が一つも選択されていない場合は、初期メッセージを表示
+    if (Object.keys(finalFilters).length === 0) {
+        resultsDiv.innerHTML = '<p>分類１を選択してください。</p>';
+        return;
+    }
 
-    // 分類１の選択をフィルタに追加
-    if (selectedCategory1) {
-        finalFilters['分類１'] = selectedCategory1;
-    }
-    
-    // 分類２以降のプルダウンの選択をフィルタに追加 (select-1からselect-5まで)
-    for (let i = 1; i < NUM_CATEGORIES; i++) {
-        const selectElement = document.getElementById(`select-${i}`);
-        const selectedValue = selectElement.value;
-        if (selectedValue) {
-            finalFilters[`分類${i + 1}`] = selectedValue;
-        }
-    }
-    
+    // 最終フィルタリング
     const finalFilteredData = masterData.filter(row => {
-        // 分類１が選択されていない場合は、データを返さない
-        if (!selectedCategory1) {
-             return false; 
-        }
         return Object.keys(finalFilters).every(key => row[key] === finalFilters[key]);
     });
 
     if (finalFilteredData.length === 0) {
-        // 分類１が選択されている場合のみ、「該当なし」を表示
-        if (selectedCategory1) {
-             resultsDiv.innerHTML = '<p>該当する商品が見つかりません。</p>';
-        } else {
-             resultsDiv.innerHTML = '<p>分類１を選択してください。</p>';
-        }
+        resultsDiv.innerHTML = '<p>該当する商品が見つかりません。</p>';
         return;
     }
     
+    // 結果をテーブルで表示
     let html = `<p><strong>${finalFilteredData.length}件</strong> の商品が見つかりました。</p>
         <div class="table-container">
         <table>
@@ -293,7 +249,11 @@ function displayResults() {
         `;
     });
 
-    html += `</tbody></table></div>`;
-    
+    html += `
+            </tbody>
+        </table>
+        </div>
+    `;
+
     resultsDiv.innerHTML = html;
 }
