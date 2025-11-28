@@ -1,6 +1,6 @@
 // CSVファイル名
 const CSV_FILE_NAME = '商品マスタ.csv';
-// 階層の列名 (分類1のみタイル表示に使用。分類2以降は商品リストの表示に使用)
+// 階層の列名 (分類1のみリスト表示に使用。分類2以降は商品リストの表示に使用)
 const CATEGORY_COLUMNS = ['分類１', '分類２', '分類３', '分類４', '分類５', '分類６'];
 // 商品詳細として表示する列名 (任意で調整してください)
 const PRODUCT_COLUMNS = [
@@ -56,8 +56,6 @@ function parseCsv(csvText) {
     if (lines.length === 0) return;
 
     // ヘッダーを抽出
-    // CSVはダブルクォーテーションやカンマのエスケープ処理が必要な場合がありますが、
-    // ここでは単純なカンマ区切りとして処理します。
     headers = lines[0].split(',').map(h => h.trim());
 
     // データ行をパース
@@ -81,7 +79,6 @@ function renderContent() {
     // フィルタリング処理
     const filteredData = allData.filter(item => {
         for (const key in currentFilters) {
-            // currentFiltersに設定されている分類が、アイテムと一致するかチェック
             if (item[key] !== currentFilters[key]) {
                 return false;
             }
@@ -89,9 +86,9 @@ function renderContent() {
         return true;
     });
 
-    // 0レベル (全て) の場合、分類１のタイルを表示
+    // 0レベル (全て) の場合、分類１のリストを表示
     if (currentLevel === 0) {
-        renderCategoryTiles(filteredData, CATEGORY_COLUMNS[0]);
+        renderCategoryList(filteredData, CATEGORY_COLUMNS[0]);
     } else {
         // 1レベル (分類１選択後) 以降は、常に商品詳細リストを表示
         renderProductList(filteredData);
@@ -102,11 +99,11 @@ function renderContent() {
 
 
 /**
- * 🧩 タイル形式で次の分類の選択肢を表示する (分類１のみ使用)
+ * 🧩 リスト形式で次の分類の選択肢を表示する (分類１のみ使用)
  * @param {Array<Object>} data - フィルタリングされた商品データ
  * @param {string} categoryColumn - 現在の階層の列名
  */
-function renderCategoryTiles(data, categoryColumn) {
+function renderCategoryList(data, categoryColumn) {
     const categoryCounts = {};
 
     data.forEach(item => {
@@ -115,22 +112,21 @@ function renderCategoryTiles(data, categoryColumn) {
             categoryCounts[key] = (categoryCounts[key] || 0) + 1;
         }
     });
-
-    // タイルのレンダリング
-    contentArea.classList.remove('product-list');
+    
+    // リストのレンダリング
     
     Object.keys(categoryCounts).sort().forEach(categoryValue => {
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        tile.innerHTML = `
-            <div class="tile-title">${categoryValue}</div>
-            <div class="tile-count">(${categoryCounts[categoryValue]}件)</div>
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item category-item';
+        listItem.innerHTML = `
+            <div class="category-title">${categoryValue}</div>
+            <div class="category-count">${categoryCounts[categoryValue]}件</div>
         `;
-        tile.dataset.value = categoryValue;
+        listItem.dataset.value = categoryValue;
         
-        // タイルクリックで分類１をフィルターに追加し、商品リスト表示へ
-        tile.addEventListener('click', () => handleTileClick(categoryColumn, categoryValue));
-        contentArea.appendChild(tile);
+        // リストクリックで分類１をフィルターに追加し、商品リスト表示へ
+        listItem.addEventListener('click', () => handleTileClick(categoryColumn, categoryValue));
+        contentArea.appendChild(listItem);
     });
 }
 
@@ -139,25 +135,25 @@ function renderCategoryTiles(data, categoryColumn) {
  * @param {Array<Object>} data - フィルタリングされた商品データ
  */
 function renderProductList(data) {
-    contentArea.classList.add('product-list');
-
     if (data.length === 0) {
-        contentArea.innerHTML = '<p>該当する商品が見つかりませんでした。</p>';
+        contentArea.innerHTML = '<p style="padding: 20px; background: white; border-radius: 4px;">該当する商品が見つかりませんでした。</p>';
         return;
     }
 
     data.forEach(item => {
         const productItem = document.createElement('div');
-        productItem.className = 'product-item';
+        productItem.className = 'list-item product-item';
         
-        // 品番を強調表示
-        let itemHtml = `<div class="product-code">品番: ${item['品番']}</div>`;
+        let itemHtml = `
+            <div class="product-code-area">品番: ${item['品番']}</div>
+            <div class="product-details-area">
+        `;
         
         // 全ての分類情報 (分類１～６) を表示
         CATEGORY_COLUMNS.forEach(col => {
             if (item[col]) {
                 itemHtml += `
-                    <div class="product-info-group">
+                    <div class="detail-group">
                         <strong>${col}</strong>
                         <span>${item[col]}</span>
                     </div>
@@ -167,16 +163,17 @@ function renderProductList(data) {
 
         // その他の詳細情報を表示
         PRODUCT_COLUMNS.forEach(col => {
-            // 品番はすでに表示されているためスキップ
             if (col.key !== '品番' && item[col.key]) {
                 itemHtml += `
-                    <div class="product-info-group">
+                    <div class="detail-group">
                         <strong>${col.label}</strong>
                         <span>${item[col.key]}</span>
                     </div>
                 `;
             }
         });
+        
+        itemHtml += `</div>`; // .product-details-area 閉じタグ
         
         productItem.innerHTML = itemHtml;
         contentArea.appendChild(productItem);
@@ -185,7 +182,7 @@ function renderProductList(data) {
 
 
 /**
- * 👆 タイルがクリックされたときの処理 (分類１の選択)
+ * 👆 リスト項目がクリックされたときの処理 (分類１の選択)
  * @param {string} column - クリックされた分類の列名 ('分類１')
  * @param {string} value - クリックされた分類の値
  */

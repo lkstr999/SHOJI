@@ -5,28 +5,27 @@ body {
     font-family: 'Noto Sans JP', 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f8f9fa; /* 明るい背景色 */
-    color: #343a40;
+    background-color: #f8f8f8; /* わずかに暗い背景色 */
+    color: #333;
     line-height: 1.6;
 }
 
 header {
-    background-color: #343a40; /* 濃いグレーのヘッダー */
+    background-color: #212529; /* 濃いブラックヘッダー */
     color: white;
     padding: 20px 20px;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 header h1 {
     margin: 0;
     font-weight: 700;
-    letter-spacing: 1px;
 }
 
 main {
     padding: 20px;
-    max-width: 1400px; /* PCでの最大幅を広げました */
+    max-width: 1000px; /* 最大幅を少し狭くし、中央に集約 */
     margin: 0 auto;
 }
 
@@ -38,13 +37,14 @@ main {
     font-size: 1em;
     padding: 12px 15px;
     background-color: white;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
+    border-left: 5px solid #007bff; /* アクセントライン */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .crumb {
     cursor: pointer;
-    color: #007bff; /* プライマリーブルー */
+    color: #495057;
     text-decoration: none;
     margin-right: 5px;
     font-weight: 500;
@@ -52,131 +52,117 @@ main {
 }
 
 .crumb:hover {
-    color: #0056b3;
+    color: #007bff;
     text-decoration: none;
 }
 
 .crumb:not(:last-child)::after {
     content: ' / ';
-    color: #adb5bd; /* グレーの区切り線 */
+    color: #ced4da;
     font-weight: normal;
     margin-left: 5px;
 }
 
 .crumb:last-child {
-    color: #495057; /* アクティブな要素 */
+    color: #212529; /* アクティブな要素 */
     cursor: default;
     font-weight: 700;
 }
 
 /* ----------------------------------------------------------------- */
-/* 🖼️ コンテンツエリア (Content Area) */
+/* 📋 コンテンツエリア (リスト表示に特化) */
 /* ----------------------------------------------------------------- */
 #content-area {
-    display: grid;
-    /* PC: 5列、タブレット: 3列、スマホ: 1列または2列 */
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-}
-
-/* 🧱 タイル共通スタイル */
-.tile {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6; /* 薄いボーダー */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
-    text-align: center;
-    cursor: pointer;
-    min-height: 120px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    gap: 12px; /* リスト間の間隔 */
 }
 
-.tile:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    background-color: #e9f5ff; /* ホバー時の背景色 */
+/* 🧱 リストアイテム共通スタイル (分類項目・商品詳細の両方に使用) */
+.list-item {
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.1s, box-shadow 0.1s;
+    cursor: pointer;
 }
 
-.tile-title {
-    font-size: 1.25em;
+.list-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 📑 分類項目のリストスタイル (分類１の選択肢) */
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid #20c997; /* ターコイズアクセント */
+}
+
+.category-title {
+    font-size: 1.1em;
     font-weight: 700;
-    margin-bottom: 8px;
-    color: #343a40;
-    word-break: break-word;
+    color: #333;
 }
 
-.tile-count {
+.category-count {
     font-size: 0.9em;
     color: #6c757d;
+    background-color: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 12px;
 }
 
-/* 📋 商品詳細リストのスタイル */
-.product-list {
-    grid-template-columns: 1fr; /* リスト表示時は1列 */
-    gap: 15px;
-}
-
+/* 🛒 商品詳細のリストスタイル */
 .product-item {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    border-left: 5px solid #28a745; /* 緑色のアクセント */
-    display: flex;
-    flex-wrap: wrap; /* スマホで折り返す */
-    align-items: center;
-    transition: background-color 0.2s;
+    cursor: default; /* クリック不可にする */
+    border-left: 5px solid #007bff; /* ブルーアクセント */
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* PC表示: 左に品番、右に詳細 */
+    gap: 10px;
+    padding: 15px 20px;
 }
 
 .product-item:hover {
-    background-color: #f1f8f3; /* ホバー時の背景色 */
+    transform: none; /* ホバー効果を削除 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.product-info-group {
-    flex: 1 1 30%; /* PCでは3つに分割 */
-    margin: 5px 0;
-    min-width: 150px;
-    padding-right: 15px;
-}
-
-.product-item .product-code {
+.product-code-area {
     font-size: 1.2em;
     font-weight: 700;
     color: #dc3545; /* 品番を赤で強調 */
-    flex: 1 1 100%; /* 品番は常に1行全体を使用 */
-    margin-bottom: 10px;
+    border-right: 1px solid #dee2e6; /* 区切り線 */
+    padding-right: 15px;
 }
 
-.product-info-group strong {
+.product-details-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 15px;
+    font-size: 0.9em;
+}
+
+.detail-group {
+    min-width: 150px;
+}
+
+.detail-group strong {
     font-weight: 700;
-    display: block;
     color: #495057;
+    display: block;
+    margin-bottom: 2px;
     font-size: 0.85em;
 }
 
-.product-info-group span {
-    display: block;
-    font-size: 1em;
+.detail-group span {
     word-break: break-all;
 }
 
-
-/* ----------------------------------------------------------------- */
-/* 📱 レスポンシブ対応 */
-/* ----------------------------------------------------------------- */
-
-/* タブレット (768px以上) */
-@media (min-width: 768px) and (max-width: 1199px) {
-    #content-area {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-}
-
-/* スマホ (767px以下) */
+/* 📱 レスポンシブ対応 (スマホ) */
 @media (max-width: 767px) {
     main {
         padding: 10px;
@@ -184,27 +170,30 @@ main {
     header h1 {
         font-size: 1.4em;
     }
-    #content-area {
-        grid-template-columns: 1fr; /* スマホでは1列表示 */
-        gap: 10px;
-    }
-    .tile {
-        min-height: 80px;
-        padding: 15px;
-    }
-    .tile-title {
-        font-size: 1.1em;
+    
+    .category-item {
+        padding: 12px 15px;
     }
 
     .product-item {
+        grid-template-columns: 1fr; /* スマホ表示: 縦積み */
         padding: 15px;
-        flex-direction: column; /* スマホでは縦に並べる */
-        align-items: flex-start;
+    }
+
+    .product-code-area {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6; /* 品番の下に線 */
+        padding-right: 0;
+        padding-bottom: 10px;
+        margin-bottom: 5px;
+    }
+
+    .product-details-area {
+        flex-direction: column;
+        gap: 10px;
     }
     
-    .product-info-group {
-        flex: 1 1 100%; /* 全幅を使用 */
-        margin: 3px 0;
-        padding-right: 0;
+    .detail-group {
+        min-width: 100%;
     }
 }
