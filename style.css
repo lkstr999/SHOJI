@@ -1,34 +1,246 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+/* すべての要素のボックスモデルをborder-boxに設定 */
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
-#filters select {
-    padding: 8px;
-    margin-right: 10px;
-    font-size: 16px;
-    min-width: 150px;
+body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    margin: 0;
+    padding: 20px; /* 全体の余白を少し広げる */
+    background-color: #f7f7f7;
+}
+
+/* ★★★ バナー画像のスタイル (PC表示はこの設定が適用され、幅が50%になります) ★★★ */
+#main-banner {
+    width: 50%; /* PCでの幅を半分に */
+    height: auto;
+    display: block; 
+    margin: 0 auto 20px auto; /* 中央寄せと下のスペース */
+    border-radius: 4px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+}
+
+/* ヘッダーのフォントを大きく */
+h1 {
+    font-size: 28px;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #333;
+}
+h2 {
+    font-size: 20px;
+}
+
+/* フィルタエリア全体（タイルとプルダウンを含む）のスタイル */
+#filters {
+    padding: 15px; /* パディングを増やす */
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* ★★★ タイル表示用のスタイル（分類１） ★★★ */
+#category-tiles {
+    display: flex; 
+    gap: 15px;
+    padding: 10px 0;
+    justify-content: flex-start;
+}
+
+/* タイルを囲むラッパー内のタイル要素のスタイル */
+#category-tiles > div:last-child {
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 15px; 
+    width: 100%;
+}
+
+/* タイル自体のスタイル */
+.category-tile {
+    /* デスクトップでは3列表示 */
+    flex-basis: calc(33.333% - 10px); 
+    max-width: calc(33.333% - 10px);
+    min-width: 120px; 
+    flex-grow: 1; 
+    padding: 25px 15px; /* タイルを大きくする */
+    background-color: #e0f7fa;
+    color: #00796b;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    user-select: none;
+    font-size: 16px; /* フォントサイズを上げる */
+}
+
+.category-tile:hover {
+    background-color: #b2ebf2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.category-tile:active {
+    transform: translateY(0);
+}
+
+
+/* ★★★ プルダウンエリア（分類２以降）のスタイル ★★★ */
+
+/* 全体のコンテナ */
+#select-filters {
+    padding-top: 10px;
+}
+
+/* 戻るボタンのスタイル */
+#back-to-tiles {
+    width: 100%;
+    padding: 12px; /* パディングを増やす */
+    margin-bottom: 15px;
+    background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: background-color 0.2s;
 }
 
+#back-to-tiles:hover {
+    background-color: #e0e0e0;
+}
+
+/* プルダウンとリセットボタンを囲むコンテナ */
+#select-containers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* プルダウン（select）とそのリセットボタン（X）を囲むコンテナ */
+.filter-container {
+    flex-grow: 1;
+    min-width: 150px; 
+    display: flex; 
+}
+
+/* 各プルダウンメニューのスタイル */
+.filter-container select {
+    flex-grow: 1; 
+    padding: 12px 10px; /* パディングを増やす */
+    font-size: 16px; /* フォントサイズを上げる */
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px; 
+    background-color: #f9f9f9;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M6%209L0%203h12z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+/* リセットボタン（X）のスタイル */
+.reset-filter {
+    width: 40px; /* ボタンの幅を増やす */
+    padding: 12px 5px; /* パディングを増やす */
+    background-color: #f44336; 
+    color: white;
+    border: 1px solid #d32f2f;
+    border-left: none; 
+    border-radius: 0 4px 4px 0; 
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px; /* フォントサイズを上げる */
+    line-height: 1;
+    transition: background-color 0.2s;
+    flex-shrink: 0; 
+}
+
+.reset-filter:hover {
+    background-color: #d32f2f;
+}
+
+/* 最終結果エリアのスタイル */
+#results {
+    background-color: #fff;
+    padding: 15px; /* パディングを増やす */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* テーブルを囲むコンテナ。スマホで横スクロール可能にする */
+#results .table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* 結果のテーブルのスタイル */
 table {
     width: 100%;
+    min-width: 600px; 
     border-collapse: collapse;
-    margin-top: 20px;
+    margin: 10px 0;
+    font-size: 16px; /* フォントサイズを上げる */
 }
 
-th, td {
+table th, table td {
+    padding: 12px 8px; /* パディングを増やす */
     border: 1px solid #ddd;
-    padding: 8px;
     text-align: left;
-    font-size: 14px;
 }
 
-th {
-    background-color: #f2f2f2;
+table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    color: #333;
 }
 
-tr:nth-child(even) {
-    background-color: #f9f9f9;
+
+/* ==================================== */
+/* ★★★ モバイル最適化 Media Query (600px以下) ★★★ */
+/* ==================================== */
+@media (max-width: 600px) {
+    
+    body {
+        padding: 10px; /* スマホでは両端の余白を少し減らす */
+    }
+    
+    /* ★★★ 変更：スマホではバナー画像を全幅に戻す ★★★ */
+    #main-banner {
+        width: 100%; 
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    /* 分類1タイルを2列にする */
+    .category-tile {
+        /* 2列表示 (gap: 15px のため調整: (100% - 15px) / 2 = 50% - 7.5px) */
+        flex-basis: calc(50% - 7.5px); 
+        max-width: calc(50% - 7.5px);
+        min-width: unset; /* 最小幅を解除 */
+        padding: 15px; /* スマホではパディングを少し抑える */
+        font-size: 15px;
+    }
+    
+    /* 分類2以降のプルダウンを縦一列にする */
+    #select-containers {
+        flex-direction: column; /* 縦に積み重ねる */
+        gap: 15px; /* 縦の間隔を広げる */
+    }
+    .filter-container {
+        width: 100%; /* 全幅にする */
+        min-width: unset; 
+    }
+
+    /* 戻るボタンも大きめに */
+    #back-to-tiles {
+        padding: 14px;
+        font-size: 16px;
+    }
 }
