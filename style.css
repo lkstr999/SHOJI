@@ -30,7 +30,7 @@ h2 {
     font-size: 20px;
 }
 
-/* フィルタエリア全体（ボタンコンテナとリセットボタンを含む）のスタイル */
+/* フィルタエリア全体 */
 #filters {
     padding: 15px; 
     background-color: #fff;
@@ -39,57 +39,65 @@ h2 {
     margin-bottom: 20px;
 }
 
-/* 各分類のグループコンテナ */
-.category-group {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-.category-group:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
+/* カテゴリコンテナ（分類１、分類２...のセクション全体）のスタイル */
+.category-container {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #fcfcfc;
 }
 
-.category-group h3 {
-    font-size: 16px;
+/* 分類の見出し */
+.category-container h3 {
     margin-top: 0;
     margin-bottom: 10px;
-    color: #00796b; /* テーマカラーの緑 */
-    border-left: 4px solid #00796b;
-    padding-left: 10px;
+    font-size: 18px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+    color: #555;
 }
 
-/* タイル（ボタン）の行コンテナ */
-.tile-row {
-    display: flex;
-    flex-wrap: wrap;
+/* ボタンリスト（選択肢のボタンを囲む部分）のスタイル */
+.button-list {
+    display: flex; /* ボタンを横に並べる */
+    flex-wrap: wrap; /* 画面幅が狭くなったら折り返す */
     gap: 8px; /* ボタン間の隙間 */
+    padding: 5px 0;
 }
 
-/* タイル（ボタン）の基本スタイル */
-.category-tile {
-    padding: 10px 15px;
-    background-color: #e0f2f1; /* 薄い緑色 */
-    color: #004d40; /* 濃い緑の文字色 */
-    border: 1px solid #b2dfdb;
-    border-radius: 20px; /* 角丸を強くする */
+/* 個々の選択肢ボタンのスタイル */
+.filter-button {
+    flex-grow: 0; 
+    padding: 8px 12px;
+    border: 1px solid #00796b; /* テーマカラー */
+    background-color: #e0f2f1;
+    color: #00796b;
+    border-radius: 20px; /* 角を丸くする */
     cursor: pointer;
-    font-weight: 500;
     font-size: 14px;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
     white-space: nowrap; /* テキストの折り返しを防ぐ */
 }
 
-/* ホバー時のスタイル */
-.category-tile:hover:not(.selected) {
-    background-color: #b2dfdb; /* 少し濃い緑 */
-    border-color: #80cbc4;
+/* 選択済みボタンのスタイル */
+.filter-button.selected {
+    background-color: #00796b; 
+    color: white;
+    font-weight: bold;
+    border-color: #004d40;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 選択されたタイル（ボタン）のスタイル */
-.category-tile.selected {
-    background-color: #00796b; /* 濃い緑色 */
-    color: white;
+/* ホバー時のスタイル */
+.filter-button:not(.selected):hover {
+    background-color: #b2dfdb;
+    border-color: #004d40;
+}
+
+/* 選択済みボタンのホバー時のスタイル */
+.filter-button.selected:hover {
+    background-color: #004d40; 
     border-color: #004d40; 
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transform: translateY(-1px);
@@ -122,11 +130,13 @@ h2 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* テーブルを囲むコンテナ。スマホで横スクロール可能にする */
 #results .table-container {
     overflow-x: auto;
     width: 100%;
 }
 
+/* 結果のテーブルのスタイル */
 table {
     width: 100%;
     min-width: 600px; 
@@ -142,31 +152,26 @@ table th, table td {
 }
 
 table th {
-    background-color: #00796b; /* テーブルヘッダーの背景色 */
-    color: white;
+    background-color: #f0f0f0;
     font-weight: bold;
-    white-space: nowrap;
 }
 
+/* 偶数行の背景色 */
 table tr:nth-child(even) {
-    background-color: #f9f9f9; /* 交互の行の背景色 */
+    background-color: #f9f9f9;
 }
 
-/* スマートフォン向けの調整 */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-    h1 {
-        font-size: 24px;
-    }
-    /* スマホではバナーを非表示または縮小 */
+/* レスポンシブ対応: バナー画像をモバイルでは非表示に */
+@media (max-width: 768px) {
     #main-banner {
-        width: 50%; /* 例として50%に縮小 */
+        width: 0; /* 幅をゼロにして非表示 */
+        height: 0;
+        margin: 0;
+        visibility: hidden;
     }
-    /* タイルのフォントとパディングを調整 */
-    .category-tile {
-        padding: 8px 12px;
-        font-size: 13px;
-    }
+}
+
+/* 表示を隠すユーティリティクラス */
+.hidden {
+    display: none !important;
 }
