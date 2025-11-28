@@ -1,93 +1,112 @@
-/* 基本設定 */
+/* ----------------------------------------------------------------- */
+/* 🎨 グローバル/リセットスタイル */
+/* ----------------------------------------------------------------- */
 body {
-    font-family: sans-serif;
+    font-family: 'Noto Sans JP', 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f7f6;
-    color: #333;
+    background-color: #f8f9fa; /* 明るい背景色 */
+    color: #343a40;
+    line-height: 1.6;
 }
 
 header {
-    background-color: #007bff;
+    background-color: #343a40; /* 濃いグレーのヘッダー */
     color: white;
-    padding: 15px 20px;
+    padding: 20px 20px;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
 main {
     padding: 20px;
-    max-width: 1200px; /* PCでの最大幅 */
+    max-width: 1400px; /* PCでの最大幅を広げました */
     margin: 0 auto;
 }
 
-/* 🍞 パンくずリスト */
+/* ----------------------------------------------------------------- */
+/* 🍞 パンくずリスト (Breadcrumb) */
+/* ----------------------------------------------------------------- */
 #breadcrumb {
-    margin-bottom: 20px;
-    font-size: 1.1em;
-    padding: 10px;
-    background-color: #e9ecef;
-    border-radius: 5px;
+    margin-bottom: 25px;
+    font-size: 1em;
+    padding: 12px 15px;
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .crumb {
     cursor: pointer;
-    color: #007bff;
+    color: #007bff; /* プライマリーブルー */
     text-decoration: none;
     margin-right: 5px;
-    font-weight: bold;
+    font-weight: 500;
+    transition: color 0.2s;
 }
 
 .crumb:hover {
-    text-decoration: underline;
+    color: #0056b3;
+    text-decoration: none;
 }
 
 .crumb:not(:last-child)::after {
-    content: ' > ';
-    color: #6c757d;
+    content: ' / ';
+    color: #adb5bd; /* グレーの区切り線 */
     font-weight: normal;
+    margin-left: 5px;
 }
 
 .crumb:last-child {
-    color: #495057;
+    color: #495057; /* アクティブな要素 */
     cursor: default;
-    font-weight: bold;
+    font-weight: 700;
 }
 
-/* 🖼️ コンテンツエリア (タイル/リスト表示) */
+/* ----------------------------------------------------------------- */
+/* 🖼️ コンテンツエリア (Content Area) */
+/* ----------------------------------------------------------------- */
 #content-area {
     display: grid;
-    /* PC: 4列、タブレット: 3列、スマホ: 1列または2列 (メディアクエリで調整) */
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
+    /* PC: 5列、タブレット: 3列、スマホ: 1列または2列 */
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
 }
 
-/* タイル共通スタイル */
+/* 🧱 タイル共通スタイル */
 .tile {
     background-color: white;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #dee2e6; /* 薄いボーダー */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
     text-align: center;
     cursor: pointer;
-    min-height: 100px;
+    min-height: 120px;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
 .tile:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    background-color: #e9f5ff; /* ホバー時の背景色 */
 }
 
 .tile-title {
-    font-size: 1.2em;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #333;
-    word-break: break-word; /* 長い名称でも折り返す */
+    font-size: 1.25em;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #343a40;
+    word-break: break-word;
 }
 
 .tile-count {
@@ -97,64 +116,95 @@ main {
 
 /* 📋 商品詳細リストのスタイル */
 .product-list {
-    /* タイル表示からリスト表示に切り替えるため、grid-template-columnsを上書き */
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr; /* リスト表示時は1列 */
+    gap: 15px;
 }
 
 .product-item {
     background-color: white;
-    padding: 15px;
+    padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    border-left: 5px solid #28a745;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid #28a745; /* 緑色のアクセント */
+    display: flex;
+    flex-wrap: wrap; /* スマホで折り返す */
+    align-items: center;
+    transition: background-color 0.2s;
 }
 
-.product-item p {
+.product-item:hover {
+    background-color: #f1f8f3; /* ホバー時の背景色 */
+}
+
+.product-info-group {
+    flex: 1 1 30%; /* PCでは3つに分割 */
     margin: 5px 0;
-    font-size: 0.9em;
-}
-
-.product-item strong {
-    font-weight: bold;
-    display: inline-block;
-    min-width: 60px; /* 見出しの幅を揃える */
+    min-width: 150px;
+    padding-right: 15px;
 }
 
 .product-item .product-code {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #007bff;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #dc3545; /* 品番を赤で強調 */
+    flex: 1 1 100%; /* 品番は常に1行全体を使用 */
     margin-bottom: 10px;
 }
 
+.product-info-group strong {
+    font-weight: 700;
+    display: block;
+    color: #495057;
+    font-size: 0.85em;
+}
 
-/* 📱 レスポンシブ対応 (スマホ/タブレット) */
+.product-info-group span {
+    display: block;
+    font-size: 1em;
+    word-break: break-all;
+}
 
-/* タブレット (600px以上) */
-@media (min-width: 600px) and (max-width: 992px) {
+
+/* ----------------------------------------------------------------- */
+/* 📱 レスポンシブ対応 */
+/* ----------------------------------------------------------------- */
+
+/* タブレット (768px以上) */
+@media (min-width: 768px) and (max-width: 1199px) {
     #content-area {
-        /* タブレットでは最大3列 */
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
 }
 
-/* スマホ (600px未満) */
-@media (max-width: 599px) {
+/* スマホ (767px以下) */
+@media (max-width: 767px) {
     main {
         padding: 10px;
     }
     header h1 {
-        font-size: 1.5em;
+        font-size: 1.4em;
     }
     #content-area {
-        /* スマホでは1列表示で大きく見やすく */
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* スマホでは1列表示 */
+        gap: 10px;
     }
     .tile {
+        min-height: 80px;
         padding: 15px;
     }
+    .tile-title {
+        font-size: 1.1em;
+    }
+
     .product-item {
-        font-size: 0.9em;
+        padding: 15px;
+        flex-direction: column; /* スマホでは縦に並べる */
+        align-items: flex-start;
+    }
+    
+    .product-info-group {
+        flex: 1 1 100%; /* 全幅を使用 */
+        margin: 3px 0;
+        padding-right: 0;
     }
 }
