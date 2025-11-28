@@ -61,7 +61,7 @@ main {
 }
 
 /* ----------------------------------------------------------------- */
-/* 🧱 分類１のタイル表示エリア */
+/* 🧱 分類１およびフィルタ用タイル表示エリア */
 /* ----------------------------------------------------------------- */
 .category-tiles {
     display: grid;
@@ -105,8 +105,20 @@ main {
 /* ----------------------------------------------------------------- */
 /* 📋 商品リスト (Excel表形式) */
 /* ----------------------------------------------------------------- */
+#filter-tiles-container {
+    margin-bottom: 20px;
+}
+
 .product-grid-container {
     padding: 0 10px;
+    margin-top: 20px; /* タイルフィルタとの間隔 */
+    overflow-x: auto; /* 横スクロールを可能にする */
+    
+    /* 修正: ヘッダー固定時の重なり防止のため、リスト本体全体を下にずらす */
+    /* ヘッダー(約50px) + パンくず(約45px) + フィルタタイル(可変) + マージンを考慮し、
+       ヘッダー固定位置を調整します。 */
+    padding-top: 50px; /* ★★★ 修正箇所：固定ヘッダー分のスペースを確保 ★★★ */
+    margin-top: -50px; /* ★★★ 修正箇所：リスト全体を上方向にずらし、空白を詰める ★★★ */
 }
 
 /* ヘッダー行 */
@@ -119,9 +131,12 @@ main {
     border-bottom: 2px solid #d1d1d6;
     font-size: 0.85em;
     color: #3a3a3c;
+    
+    /* 修正: ヘッダーの固定位置を調整 */
     position: sticky;
-    top: 50px; /* ヘッダーの高さに合わせて固定 */
+    top: 0; /* ★★★ 修正箇所：親要素のpadding-topを基準にするため0に設定 ★★★ */
     z-index: 50;
+    min-width: 900px; /* PCレイアウトの最小幅を確保 */
 }
 
 /* データ行 */
@@ -132,6 +147,7 @@ main {
     border-bottom: 1px solid #e5e5ea;
     font-size: 0.9em;
     transition: background-color 0.1s;
+    min-width: 900px; /* PCレイアウトの最小幅を確保 */
 }
 
 .product-row:hover {
@@ -154,6 +170,59 @@ main {
 /* ----------------------------------------------------------------- */
 /* 📱 グリッドカラム定義とレスポンシブ対応 */
 /* ----------------------------------------------------------------- */
-/* PC表示 (1200px以上): 全カラム表示 */
+
+/* 💻 PC表示 (900px以上): 全カラム表示 */
 @media (min-width: 900px) {
-    .product-header, .product-row
+    .product-header, .product-row {
+        /* 全9列 (分類１～６, 品番, 備考１, 備考２) */
+        grid-template-columns: 
+            minmax(60px, 1fr) /* 分類１ */
+            minmax(60px, 1fr) /* 分類２ */
+            minmax(60px, 1fr) /* 分類３ */
+            minmax(60px, 1fr) /* 分類４ */
+            minmax(60px, 1fr) /* 分類５ */
+            minmax(60px, 1fr) /* 分類６ */
+            minmax(100px, 1.5fr) /* 品番 */
+            minmax(80px, 1.5fr) /* 備考１ */
+            minmax(80px, 1.5fr); /* 備考２ */
+        min-width: unset; /* 必要最小幅を解除 */
+    }
+}
+
+/* 📱 スマホ表示 (900px未満): 横スクロールと縦積み表示 */
+@media (max-width: 899px) {
+    /* 900px未満では横スクロールを強制するために min-width を維持 */
+    .product-grid-container {
+        overflow-x: auto;
+        
+        /* 修正: スマホ表示では固定ヘッダーがないため、マージン・パディングをリセット */
+        padding-top: 0; 
+        margin-top: 20px; 
+    }
+    
+    .product-header {
+        position: static; /* スマホではヘッダーを固定しない */
+        display: none; /* スマホではヘッダー行を非表示（縦積み表示のため） */
+    }
+
+    .product-row {
+        /* スマホ/タブレットでは縦積みのカード表示に切り替え */
+        display: flex; 
+        flex-direction: column;
+        padding: 10px;
+        margin: 0 10px 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        min-width: unset; /* 最小幅を解除 */
+    }
+    
+    .product-row div {
+        white-space: normal; /* 折り返しを許可 */
+        text-align: left;
+        padding: 2px 0;
+        width: 100%;
+    }
+    
+    /* スマホでの表示内容を調整 */
+    .product-row .col-品番 { 
+        font-size: 1.1em;
+        margin-bottom
