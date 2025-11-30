@@ -5,20 +5,18 @@ body {
     font-family: 'Noto Sans JP', 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f2f2f7; /* iOSの背景色に近いライトグレー */
-    color: #1c1c1e; /* 濃い文字色 */
+    background-color: #f2f2f7; 
+    color: #1c1c1e; 
     line-height: 1.5;
 }
 
 header {
-    background-color: white; /* ヘッダーを白に変更 */
+    background-color: white; 
     color: #1c1c1e;
     padding: 15px 20px;
     text-align: center;
-    border-bottom: 1px solid #c7c7cc; /* 薄い区切り線 */
+    border-bottom: 1px solid #c7c7cc; 
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
     z-index: 100;
 }
 
@@ -28,30 +26,72 @@ header h1 {
     font-size: 1.3em;
 }
 
+#header-title {
+    cursor: pointer;
+    display: inline-block;
+}
+
 main {
-    padding: 20px 10px; /* 左右の余白を抑えめに */
+    padding: 20px 10px; 
     max-width: 1200px;
     margin: 0 auto;
+    overflow-x: hidden; 
 }
 
 /* ----------------------------------------------------------------- */
 /* 🍞 パンくずリスト (Breadcrumb) */
 /* ----------------------------------------------------------------- */
 #breadcrumb {
-    margin: 5px 10px 20px 10px;
+    margin: 0; 
     font-size: 0.95em;
-    padding: 10px 15px;
+    padding: 10px 10px;
     background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid #d1d1d6; 
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    z-index: 90; 
+    margin-bottom: 20px; 
 }
 
+/* ★ 修正箇所: 区切り記号の追加 ★ */
 .crumb {
     cursor: pointer;
-    color: #007aff; /* iOSのブルー */
+    color: #007aff; 
     text-decoration: none;
-    margin-right: 5px;
+    margin-right: 12px; /* 区切り記号のためのスペースを確保 */
     font-weight: 500;
+    position: relative; /* ::afterを配置するための基準 */
+}
+
+/* 辿ってきた階層の後に区切り記号（>）を表示 */
+.crumb::after {
+    content: '>'; /* 区切り文字 */
+    color: #8e8e93; /* 色を少し薄くする */
+    margin-left: 7px; /* 文字間のスペース */
+    font-weight: 700;
+    position: absolute;
+    top: 50%;
+    right: -10px; /* .crumb の右側に配置 */
+    transform: translateY(-50%);
+}
+
+/* 最後の要素には区切り記号を表示しない */
+.crumb:last-child::after {
+    content: none;
+}
+/* ----------------------------------------------------------------- */
+
+.crumb:first-child {
+    display: inline;
+    padding: 0;
+    margin-right: 12px; /* :after用に調整 */
+    background-color: transparent;
+    color: #007aff; 
+    border-radius: 0;
+    font-weight: 500;
+}
+
+.crumb:first-child:hover {
+    background-color: transparent;
 }
 
 .crumb:last-child {
@@ -65,20 +105,20 @@ main {
 /* ----------------------------------------------------------------- */
 .category-tiles {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* PC: 広いタイル */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
     gap: 12px;
     padding: 0 10px;
 }
 
 .category-tile {
     background-color: white;
-    padding: 20px 10px;
+    padding: 20px 10px; /* 分類１のタイルはこのサイズを維持 */
     border-radius: 12px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: transform 0.1s;
+    transition: transform 0.1s, background-color 0.1s, border-color 0.1s;
     text-align: center;
     cursor: pointer;
-    min-height: 80px;
+    min-height: 80px; /* 分類１のタイルはこのサイズを維持 */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -88,6 +128,24 @@ main {
 .category-tile:hover {
     transform: scale(0.98);
     background-color: #f7f7f7;
+}
+
+/* 複数選択されたときのスタイル */
+.category-tile.selected-filter {
+    background-color: #007aff;
+    color: white;
+    border-color: #007aff;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.4);
+    transform: scale(1.02);
+}
+
+/* 選択されたタイルの文字色と件数を上書き */
+.category-tile.selected-filter .tile-title {
+    color: white;
+}
+
+.category-tile.selected-filter .tile-count {
+    color: #d1eaff;
 }
 
 .tile-title {
@@ -102,29 +160,79 @@ main {
     color: #8e8e93;
 }
 
+
+/* 分類２以降のフィルタタイルをコンパクトにするスタイル */
+#filter-tiles-container .category-tiles {
+    /* 分類２以降のグリッド間隔は少し詰める */
+    gap: 8px;
+}
+
+#filter-tiles-container .category-tile {
+    padding: 8px 5px; /* パディングを大幅に削減 */
+    min-height: 35px; /* 最小高さを大幅に削減 */
+    border-radius: 8px;
+    /* 選択時の拡大を抑える */
+    transform: none; 
+}
+
+#filter-tiles-container .category-tile:hover {
+    transform: scale(0.98); /* hover時のサイズ変更は残す */
+}
+
+#filter-tiles-container .category-tile.selected-filter {
+    transform: scale(1.02); /* 選択時のみわずかに拡大 */
+}
+
+#filter-tiles-container .tile-title {
+    font-size: 0.9em; /* タイトルフォントを少し小さく */
+    margin-bottom: 2px; /* マージンを小さく */
+}
+
+#filter-tiles-container .tile-count {
+    font-size: 0.75em; /* 件数フォントを小さく */
+}
+
+
 /* ----------------------------------------------------------------- */
 /* 📋 商品リスト (Excel表形式) */
 /* ----------------------------------------------------------------- */
 #filter-tiles-container {
     margin-bottom: 20px;
+    padding: 0 10px; /* 親のパディングに合わせて左右にスペースを追加 */
 }
+
+/* #content-area の内部にある #filter-tiles-container と .product-grid-container を正しく縦に配置する */
+#content-area.product-grid-container {
+    /* 外部コンテナをブロックレベルにし、内部要素が縦に積み重なるようにする */
+    display: block;
+    padding: 0; /* 内部の要素にpaddingを任せる */
+}
+
 
 .product-grid-container {
     padding: 0 10px;
-    margin-top: 20px; /* タイルフィルタとの間隔 */
-    overflow-x: auto; /* 横スクロールを可能にする */
+    margin-top: 20px; 
+    overflow-x: auto; 
     
-    /* 修正: ヘッダー固定時の重なり防止のため、リスト本体全体を下にずらす */
-    /* ヘッダー(約50px) + パンくず(約45px) + フィルタタイル(可変) + マージンを考慮し、
-       ヘッダー固定位置を調整します。 */
-    padding-top: 50px; /* ★★★ 修正箇所：固定ヘッダー分のスペースを確保 ★★★ */
-    margin-top: -50px; /* ★★★ 修正箇所：リスト全体を上方向にずらし、空白を詰める ★★★ */
+    padding-top: 0; 
+    margin-top: 20px; 
 }
 
 /* ヘッダー行 */
 .product-header {
     display: grid;
-    background-color: #e5e5ea; /* ヘッダーの背景色 */
+    grid-template-columns: 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(100px, 1.5fr) 
+        minmax(80px, 1.5fr) 
+        minmax(80px, 1.5fr); 
+
+    background-color: #e5e5ea; 
     font-weight: 700;
     padding: 10px 0;
     border-radius: 6px 6px 0 0;
@@ -132,22 +240,32 @@ main {
     font-size: 0.85em;
     color: #3a3a3c;
     
-    /* 修正: ヘッダーの固定位置を調整 */
-    position: sticky;
-    top: 0; /* ★★★ 修正箇所：親要素のpadding-topを基準にするため0に設定 ★★★ */
     z-index: 50;
-    min-width: 900px; /* PCレイアウトの最小幅を確保 */
+    
+    min-width: 900px; 
 }
 
-/* データ行 */
+/* データ行 (変更なし) */
 .product-row {
     display: grid;
+    grid-template-columns: 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(60px, 1fr) 
+        minmax(100px, 1.5fr) 
+        minmax(80px, 1.5fr) 
+        minmax(80px, 1.5fr); 
+        
     background-color: white;
     padding: 10px 0;
     border-bottom: 1px solid #e5e5ea;
     font-size: 0.9em;
     transition: background-color 0.1s;
-    min-width: 900px; /* PCレイアウトの最小幅を確保 */
+    
+    min-width: 900px; 
 }
 
 .product-row:hover {
@@ -158,71 +276,60 @@ main {
     padding: 0 5px;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: nowrap; 
     text-align: center;
 }
 
 .product-row .col-品番 {
     font-weight: 600;
-    color: #d11e1e; /* 品番を赤で強調 */
+    color: #d11e1e; 
 }
 
 /* ----------------------------------------------------------------- */
 /* 📱 グリッドカラム定義とレスポンシブ対応 */
 /* ----------------------------------------------------------------- */
 
-/* 💻 PC表示 (900px以上): 全カラム表示 */
+/* 💻 PC表示 (900px以上): 画面幅いっぱいに広げる */
 @media (min-width: 900px) {
     .product-header, .product-row {
-        /* 全9列 (分類１～６, 品番, 備考１, 備考２) */
-        grid-template-columns: 
-            minmax(60px, 1fr) /* 分類１ */
-            minmax(60px, 1fr) /* 分類２ */
-            minmax(60px, 1fr) /* 分類３ */
-            minmax(60px, 1fr) /* 分類４ */
-            minmax(60px, 1fr) /* 分類５ */
-            minmax(60px, 1fr) /* 分類６ */
-            minmax(100px, 1.5fr) /* 品番 */
-            minmax(80px, 1.5fr) /* 備考１ */
-            minmax(80px, 1.5fr); /* 備考２ */
-        min-width: unset; /* 必要最小幅を解除 */
+        min-width: unset; 
+    }
+    .product-grid-container {
+        padding-top: 0; 
+        margin-top: 20px;
     }
 }
 
-/* 📱 スマホ表示 (900px未満): 横スクロールと縦積み表示 */
+/* 📱 スマホ表示 (900px未満) */
 @media (max-width: 899px) {
-    /* 900px未満では横スクロールを強制するために min-width を維持 */
+    
     .product-grid-container {
         overflow-x: auto;
-        
-        /* 修正: スマホ表示では固定ヘッダーがないため、マージン・パディングをリセット */
         padding-top: 0; 
         margin-top: 20px; 
     }
     
     .product-header {
-        position: static; /* スマホではヘッダーを固定しない */
-        display: none; /* スマホではヘッダー行を非表示（縦積み表示のため） */
+        position: static; 
+        border-radius: 4px; 
+        margin: 0 0 5px 0; 
+        padding: 8px 0;
     }
 
     .product-row {
-        /* スマホ/タブレットでは縦積みのカード表示に切り替え */
-        display: flex; 
-        flex-direction: column;
-        padding: 10px;
-        margin: 0 10px 10px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        min-width: unset; /* 最小幅を解除 */
+        padding: 10px 0; 
+        margin: 0; 
     }
     
     .product-row div {
-        white-space: normal; /* 折り返しを許可 */
-        text-align: left;
-        padding: 2px 0;
-        width: 100%;
+        white-space: nowrap; 
+        text-align: center;
+        padding: 0 5px;
     }
-    
-    /* スマホでの表示内容を調整 */
-    .product-row .col-品番 { 
-        font-size: 1.1em;
-        margin-bottom
+
+    .category-tiles {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+        padding: 0 10px;
+    }
+}

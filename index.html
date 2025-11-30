@@ -5,21 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHOJI商品・在庫検索システム</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
     <header>
-        <h1>SHOJI商品・在庫検索システム</h1>
+        <h1><span id="header-title">SHOJI商品・在庫検索システム</span></h1>
     </header>
 
     <main>
-        <nav id="breadcrumb">
-            <span class="crumb" data-level="0">🔍 全ての商品</span>
-        </nav>
+        
+        <div id="breadcrumb">
+            </div>
+
+        <p id="loading-message" style="text-align: center; margin-top: 50px;">
+            データを読み込み中...
+        </p>
 
         <div id="content-area">
-            <p id="loading-message">🚀 データを読み込み中...</p>
-        </div>
+            </div>
+
     </main>
 
     <script src="script.js"></script>

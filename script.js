@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * 💾 CSVファイルを読み込み、パースする
- * @param {string} url - CSVファイルのパス
+ * (変更なし)
  */
 async function fetchCsvData(url) {
     try {
@@ -53,7 +53,7 @@ async function fetchCsvData(url) {
 
 /**
  * 📊 CSVテキストを行と列にパースする
- * @param {string} csvText - CSVファイルの内容
+ * (変更なし)
  */
 function parseCsv(csvText) {
     const lines = csvText.trim().split(/\r?\n/);
@@ -74,12 +74,12 @@ function parseCsv(csvText) {
 
 /**
  * 🧱 現在の階層に基づいてコンテンツをレンダリングする
+ * (変更なし)
  */
 function renderContent() {
     contentArea.innerHTML = '';
     
     // フィルタリング処理
-    // フィルタリングは常に実行されます。
     const filteredData = allData.filter(item => {
         for (const key in currentFilters) {
             if (item[key] !== currentFilters[key]) {
@@ -95,35 +95,36 @@ function renderContent() {
         contentArea.classList.remove('product-grid-container');
         renderCategoryTiles(filteredData, CATEGORY_COLUMNS[0], handleTileClick);
     } else {
-        // 1レベル以降（分類１選択後）
+        // 1レベル以降（分類１選択後）は商品リストと全分類フィルタを表示
         contentArea.classList.remove('category-tiles');
         contentArea.classList.add('product-grid-container');
         
-        // 1. 次の分類（分類２以降）のフィルタタイルを表示するコンテナを作成
+        // 1. 全ての分類フィルタを表示するコンテナを作成
         const filterContainer = document.createElement('div');
         filterContainer.id = 'filter-tiles-container';
         contentArea.appendChild(filterContainer);
         
-        // 2. 次の分類のタイルボタンを作成・表示
-        // 現在のフィルタレベル + 1 が、次のフィルタ対象の分類
-        const nextFilterIndex = Object.keys(currentFilters).length; // currentFiltersの数 = 現在のフィルタ階層
-        const nextCategoryColumn = CATEGORY_COLUMNS[nextFilterIndex];
-        
-        if (nextCategoryColumn) {
-            // タイトルを表示 (例: 分類２で絞り込む)
-            const filterTitle = document.createElement('h3');
-            filterTitle.textContent = `${nextCategoryColumn}でさらに絞り込む:`;
-            filterTitle.style.margin = '10px 10px 5px';
-            filterTitle.style.fontSize = '1em';
-            filterContainer.appendChild(filterTitle);
+        // 2. 分類２から分類６までのフィルタタイルを作成・表示
+        for (let i = 1; i < CATEGORY_COLUMNS.length; i++) {
+            const currentCategoryColumn = CATEGORY_COLUMNS[i];
             
-            // タイルボタンを表示する内部コンテナ
-            const tilesWrapper = document.createElement('div');
-            tilesWrapper.className = 'category-tiles'; // CSSクラスを流用
-            filterContainer.appendChild(tilesWrapper);
-            
-            // タイル生成ロジック
-            renderCategoryTiles(filteredData, nextCategoryColumn, handleFilterTileClick, tilesWrapper);
+            if (!currentFilters[currentCategoryColumn]) {
+                
+                // タイトルを表示 (例: 分類２で絞り込む)
+                const filterTitle = document.createElement('h3');
+                filterTitle.textContent = `${currentCategoryColumn}で絞り込む:`;
+                filterTitle.style.margin = '10px 10px 5px';
+                filterTitle.style.fontSize = '1em';
+                filterContainer.appendChild(filterTitle);
+                
+                // タイルボタンを表示する内部コンテナ
+                const tilesWrapper = document.createElement('div');
+                tilesWrapper.className = 'category-tiles'; // CSSクラスを流用
+                filterContainer.appendChild(tilesWrapper);
+                
+                // タイル生成ロジック
+                renderCategoryTiles(filteredData, currentCategoryColumn, handleFilterTileClick, tilesWrapper);
+            }
         }
         
         // 3. 商品リストを表示
@@ -135,11 +136,8 @@ function renderContent() {
 
 
 /**
- * 🧩 タイル形式で選択肢を表示する (分類１と、分類２以降のフィルタに使用)
- * @param {Array<Object>} data - フィルタリングされた商品データ
- * @param {string} categoryColumn - 現在の階層の列名
- * @param {function} clickHandler - クリック時に実行するハンドラ関数
- * @param {HTMLElement} [targetContainer=contentArea] - タイルを挿入するコンテナ
+ * 🧩 タイル形式で選択肢を表示する 
+ * (変更なし)
  */
 function renderCategoryTiles(data, categoryColumn, clickHandler, targetContainer = contentArea) {
     const categoryCounts = {};
@@ -150,6 +148,16 @@ function renderCategoryTiles(data, categoryColumn, clickHandler, targetContainer
             categoryCounts[key] = (categoryCounts[key] || 0) + 1;
         }
     });
+    
+    // タイルが1つもない場合はレンダリングしない
+    if (Object.keys(categoryCounts).length === 0) {
+        // nullチェックを追加 (要素が存在しない場合にエラーにならないように)
+        if (targetContainer.previousElementSibling) {
+            targetContainer.previousElementSibling.remove(); // タイトル(h3)を削除
+        }
+        targetContainer.remove(); // タイルwrapperを削除
+        return;
+    }
 
     // タイルのレンダリング
     Object.keys(categoryCounts).sort().forEach(categoryValue => {
@@ -169,19 +177,21 @@ function renderCategoryTiles(data, categoryColumn, clickHandler, targetContainer
 
 /**
  * 📋 商品の詳細をExcelグリッド形式で表示する
- * @param {Array<Object>} data - フィルタリングされた商品データ
+ * (変更なし)
  */
 function renderProductGrid(data) {
+    
+    // 商品リストを包含するコンテナを作成し、contentAreaに追加
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'product-grid-container';
+    contentArea.appendChild(gridContainer); 
+
     if (data.length === 0) {
         // タイルコンテナの直後にメッセージを表示
-        contentArea.innerHTML += '<p style="padding: 20px; background: white; border-radius: 4px; margin-top: 15px;">該当する商品が見つかりませんでした。</p>';
+        gridContainer.innerHTML = '<p style="padding: 20px; background: white; border-radius: 4px; margin-top: 15px;">該当する商品が見つかりませんでした。</p>';
         return;
     }
     
-    const gridContainer = document.createElement('div');
-    gridContainer.className = 'product-grid-container';
-    contentArea.appendChild(gridContainer);
-
     // 1. ヘッダー行の作成
     const headerRow = document.createElement('div');
     headerRow.className = 'product-header';
@@ -214,10 +224,8 @@ function renderProductGrid(data) {
 
 
 /**
- * 👆 分類１のタイルがクリックされたときの処理
- * (分類１を選択したら、リスト表示とフィルタタイル表示に切り替える)
- * @param {string} column - クリックされた分類の列名 ('分類１')
- * @param {string} value - クリックされた分類の値
+ * 👆 分類１のタイルがクリックされたときの処理 (リスト表示に切り替え)
+ * (変更なし)
  */
 function handleTileClick(column, value) {
     currentFilters = {}; // 全てリセット
@@ -227,29 +235,39 @@ function handleTileClick(column, value) {
 }
 
 /**
- * 👆 分類２以降のフィルタタイルがクリックされたときの処理
- * (現在のフィルタに条件を追加し、リストとタイルを更新する)
- * @param {string} column - クリックされた分類の列名 ('分類２', '分類３', ...)
- * @param {string} value - クリックされた分類の値
+ * 👆 分類２以降のフィルタタイルがクリックされたときの処理 (フィルタ条件の追加)
+ * (変更なし)
  */
 function handleFilterTileClick(column, value) {
     // 既存のフィルタを維持しつつ、新しいフィルタ条件を追加
     currentFilters[column] = value;
-    currentLevel++; // 階層を一つ進める
+    
+    // フィルタが追加されたため、現在の階層(currentLevel)を再計算する
+    let maxLevel = 0;
+    CATEGORY_COLUMNS.forEach((col, index) => {
+        if (currentFilters[col]) {
+            // フィルタが存在する中で最も深い階層を currentLevel とする
+            maxLevel = Math.max(maxLevel, index + 1);
+        }
+    });
+    currentLevel = maxLevel;
+    
     renderContent();
 }
 
 
 /**
- * 🗺️ パンくずリストを更新する
+ * 🗺️ パンくずリストを更新する - 旧ロジックに戻す
  */
 function updateBreadcrumb() {
     breadcrumbContainer.innerHTML = '';
     
-    // レベル0: 全て
+    // ★★★ 修正箇所: TOP画面の非表示/TOPへボタンのロジックを削除し、旧仕様に戻す ★★★
+    
+    // 1. 常に「🔍 全ての商品」という最初のクラムを作成
     createCrumb('🔍 全ての商品', 0);
     
-    // レベル1以降: 分類１～Nまでのフィルタ条件をパンくずリストに追加
+    // 2. レベル1以降: 分類１～Nまでのフィルタ条件をパンくずリストに追加
     let filterSnapshot = {};
     for (let i = 0; i < CATEGORY_COLUMNS.length; i++) {
         const col = CATEGORY_COLUMNS[i];
@@ -257,7 +275,7 @@ function updateBreadcrumb() {
             const value = currentFilters[col];
             filterSnapshot[col] = value;
             
-            // 新しい参照を作成してフィルタを渡す（戻る時に現在の階層までフィルタを復元するため）
+            // 新しい参照を作成してフィルタを渡す
             const crumbFilters = Object.assign({}, filterSnapshot);
             
             createCrumb(value, i + 1, crumbFilters);
@@ -267,9 +285,7 @@ function updateBreadcrumb() {
 
 /**
  * 🥖 パンくずリストの要素を作成する
- * @param {string} text - 表示テキスト
- * @param {number} level - 階層レベル
- * @param {Object} [filters={}] - その階層に戻るためのフィルター条件
+ * (変更なし)
  */
 function createCrumb(text, level, filters = {}) {
     const crumb = document.createElement('span');
@@ -287,17 +303,26 @@ function createCrumb(text, level, filters = {}) {
 
 /**
  * ↩️ パンくずリストの要素がクリックされたときの処理
- * @param {number} targetLevel - 戻りたい階層レベル (0, 1, 2, ...)
- * @param {Object} targetFilters - 戻る階層の絞り込み条件
+ * (変更なし)
  */
 function handleCrumbClick(targetLevel, targetFilters) {
     currentLevel = targetLevel;
     currentFilters = {};
     
     // クリックされた階層までのフィルタ条件を復元
-    for (const key in targetFilters) {
-        currentFilters[key] = targetFilters[key];
+    const newFilters = {};
+    let maxLevel = 0;
+    
+    for(let i=0; i<CATEGORY_COLUMNS.length; i++){
+        const col = CATEGORY_COLUMNS[i];
+        if(targetFilters[col]){
+             newFilters[col] = targetFilters[col];
+             maxLevel = Math.max(maxLevel, i + 1);
+        }
     }
+
+    currentFilters = newFilters;
+    currentLevel = maxLevel;
     
     renderContent();
 }
